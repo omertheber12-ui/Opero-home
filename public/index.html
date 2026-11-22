@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Opero</title>
+    <style>
+      :root { color-scheme: light; --ink: #1c1915; --paper: #f6f1e7; --line: #d9cfc0; --accent: #8c3a2f; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font: 16px/1.45 "Iowan Old Style", Palatino, serif; color: var(--ink); background: var(--paper); }
+      header, main { padding: 16px 20px; }
+      header { display: flex; justify-content: space-between; gap: 16px; align-items: center; border-bottom: 1px solid var(--line); }
+      h1 { font-size: 22px; margin: 0; letter-spacing: 0.04em; }
+      .controls { display: flex; gap: 12px; align-items: end; }
+      label { display: grid; gap: 4px; font-size: 13px; }
+      select, input, button, textarea { font: inherit; color: inherit; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+      button { background: var(--ink); color: var(--paper); cursor: pointer; }
+      main { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; min-height: calc(100vh - 74px); }
+      #thread { display: flex; flex-direction: column; gap: 8px; min-height: 240px; }
+      .msg { padding: 8px 10px; background: white; border: 1px solid var(--line); }
+      .msg.agent { background: transparent; }
+      form { display: flex; gap: 8px; margin-top: 12px; }
+      textarea { flex: 1; min-height: 72px; resize: vertical; }
+      #plan { margin-top: 12px; }
+      .step { padding: 8px 0; border-top: 1px solid var(--line); }
+      #screen { width: 100%; min-height: 360px; background: #111; border-radius: 8px; }
+      .screen-actions { display: flex; gap: 8px; margin-top: 8px; }
+      @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1 id="title">Opero</h1>
+      <div class="controls">
+        <label id="level-label">Level
+          <select id="level"><option value="1">1</option><option value="2" selected>2</option></select>
+        </label>
+        <label id="language-label">Language
+          <select id="language"><option value="en">English</option><option value="he">עברית</option></select>
+        </label>
+      </div>
+    </header>
+    <main>
+      <section>
+        <div id="thread"></div>
+        <form id="composer">
+          <textarea id="mission" placeholder="Give a mission"></textarea>
+          <button id="send" type="submit">Send</button>
+        </form>
+        <section id="plan">
+          <label id="end-label">End <input id="end" /></label>
+          <div id="steps"></div>
+        </section>
+      </section>
+      <section>
+        <img id="screen" alt="Computer" />
+        <div class="screen-actions">
+          <button id="take" type="button">Take control</button>
+          <button id="hand" type="button">I'm done</button>
+        </div>
+      </section>
+    </main>
+    <script>
+      const thread = document.querySelector("#thread")
+      const steps = document.querySelector("#steps")
+      const end = document.querySelector("#end")
+      const screen = document.querySelector("#screen")
+      const mission = document.querySelector("#mission")
+      const socket = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host)
+      let waiting = false
+      const send = (event) => socket.send(JSON.stringify(event))
+      socket.addEventListener("message", (event) => {
+        const message = JSON.parse(event.data)
+        if (message.type === "labels") applyLabels(message.labels, message.language)
+        if (message.type === "settings") {
+          document.querySelector("#level").value = String(message.level)
+          document.querySelector("#language").value = message.language
+        }
+        if (message.type === "message") add(message.role, message.text)
+        if (message.type === "question") { waiting = true; add("agent", message.question) }
+        if (message.type === "status" && message.status !== "waiting_on_user") waiting = false
+        if (message.type === "plan") showPlan(message.mission)
+        if (message.type === "screen") screen.src = "data:image/jpeg;base64," + message.image
+      })
+      document.querySelector("#composer").addEventListener("submit", (event) => {
+        event.preventDefault()
+        const text = mission.value.trim()
+        if (!text) return
+        send({ type: waiting ? "answer" : "mission", text })
+        mission.value = ""
+      })
+      end.addEventListener("change", () => send({ type: "edit_end", end: end.value }))
+      document.querySelector("#level").addEventListener("change", (event) => send({ type: "level", level: Number(event.target.value) }))
+      document.querySelector("#language").addEventListener("change", (event) => send({ type: "language", language: event.target.value }))
+      document.querySelector("#take").addEventListener("click", () => send({ type: "driver", text: "user" }))
+      document.querySelector("#hand").addEventListener("click", () => send({ type: "driver", text: "agent" }))
+      screen.addEventListener("click", (event) => {
+        const box = screen.getBoundingClientRect()
+        const x = Math.round((event.clientX - box.left) * (1280 / box.width))
+        const y = Math.round((event.clientY - box.top) * (800 / box.height))
+        send({ type: "click", x, y })
+      })
+      function add(role, text) {
+        const row = document.createElement("div")
+        row.className = "msg " + role
+        row.textContent = text
+        thread.append(row)
+      }
+      function showPlan(plan) {
+        end.value = plan.end
+        steps.replaceChildren()
+        for (const item of plan.steps) {
+          const row = document.createElement("div")
+          row.className = "step"
+          row.textContent = item.site + " — " + item.text + " — " + item.doneWhen
+          steps.append(row)
+        }
+      }
+      function applyLabels(text, language) {
+        document.documentElement.lang = language
+        document.documentElement.dir = language === "he" ? "rtl" : "ltr"
+        document.querySelector("#title").textContent = text.title
+        mission.placeholder = text.placeholder
+        document.querySelector("#send").textContent = text.send
+        document.querySelector("#take").textContent = text.take
+        document.querySelector("#hand").textContent = text.handBack
+        document.querySelector("#end-label").firstChild.textContent = text.end + " "
+        document.querySelector("#level-label").firstChild.textContent = text.level + " "
+        document.querySelector("#language-label").firstChild.textContent = text.language + " "
+        screen.alt = text.screen
+      }
+    </script>
+  </body>
+</html>
