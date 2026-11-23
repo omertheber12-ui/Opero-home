@@ -1,3 +1,10 @@
+const STRONG_LINE = 24
+const RECOVERED_CORE = 35
+const SINGLE_QUOTE = 40
+const HEADLINE_MIN = 28
+const HEADLINE_MAX = 220
+const HEADLINE_CAP = 6
+
 export function normalizeText(value: string): string {
   return value.replace(/\s+/g, " ").trim().toLowerCase()
 }
@@ -114,18 +121,18 @@ export function quotedEvidence(pageText: string, evidence: string): string | nul
       /^(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|jun(e)?|jul(y)?|aug(ust)?|sep(tember)?|oct(ober)?|nov(ember)?|dec(ember)?)\s+\d{1,2},?\s+\d{4}\s*[—\-–:]\s*/i,
       "",
     )
-    const fromPage = findPageLineFor(pageLines, core.length >= 35 ? core : norm)
+    const fromPage = findPageLineFor(pageLines, core.length >= RECOVERED_CORE ? core : norm)
     if (fromPage) recovered.push(fromPage)
   }
 
   const unique = [...new Set(recovered)]
-  const strong = unique.filter((line) => line.length >= 24 || /\d/.test(line))
-  if (strong.length > 0) return strong.slice(0, 6).join("\n")
-  if (unique.length >= 2) return unique.slice(0, 6).join("\n")
-  if (unique.length === 1 && unique[0]!.length >= 40) return unique[0]!
+  const strong = unique.filter((line) => line.length >= STRONG_LINE || /\d/.test(line))
+  if (strong.length > 0) return strong.slice(0, HEADLINE_CAP).join("\n")
+  if (unique.length >= 2) return unique.slice(0, HEADLINE_CAP).join("\n")
+  if (unique.length === 1 && unique[0]!.length >= SINGLE_QUOTE) return unique[0]!
 
   const single = evidence.trim()
-  if (single.length >= 40 && page.includes(normalizeText(single))) return single
+  if (single.length >= SINGLE_QUOTE && page.includes(normalizeText(single))) return single
   return null
 }
 
@@ -158,7 +165,7 @@ export function topicLinesFromPage(pageText: string, request: string): string | 
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => {
-      if (line.length < 28 || line.length > 220) return false
+      if (line.length < HEADLINE_MIN || line.length > HEADLINE_MAX) return false
       const n = normalizeText(line)
       if (n.startsWith("skip to") || n.includes("cookie") || n.includes("subscribe")) return false
       const hits = want.filter((key) => n.includes(key))
@@ -166,9 +173,9 @@ export function topicLinesFromPage(pageText: string, request: string): string | 
       return rare.some((key) => n.includes(key))
     })
 
-  const unique = [...new Set(lines)].slice(0, 6)
+  const unique = [...new Set(lines)].slice(0, HEADLINE_CAP)
   if (unique.length >= 2) return unique.join("\n")
-  if (unique.length === 1 && unique[0]!.length >= 40) return unique[0]!
+  if (unique.length === 1 && unique[0]!.length >= SINGLE_QUOTE) return unique[0]!
   return null
 }
 

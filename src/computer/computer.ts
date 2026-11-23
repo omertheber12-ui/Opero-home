@@ -1,4 +1,5 @@
 import type { PageControl } from "../domain/types.js"
+import { BLANK_URL } from "../config.js"
 
 export class AgentFrozen extends Error {
   constructor() {
@@ -28,6 +29,9 @@ export type Computer = {
   typeRef(ref: number, text: string): Promise<void>
   press(key: string): Promise<void>
   scroll(direction: "up" | "down"): Promise<void>
+  userType(text: string): Promise<void>
+  userPress(key: string): Promise<void>
+  userScroll(direction: "up" | "down"): Promise<void>
   fill(selector: string, text: string): Promise<void>
   cookies(): Promise<Array<{ name: string; value: string }>>
   liveView(): string
@@ -39,7 +43,7 @@ export class FakeComputer implements Computer {
   calls: string[] = []
   typedChars: string[] = []
   text = ""
-  currentUrl = "about:blank"
+  currentUrl = BLANK_URL
   awake = false
   controls: PageControl[] = []
 
@@ -113,6 +117,19 @@ export class FakeComputer implements Computer {
 
   async scroll(direction: "up" | "down"): Promise<void> {
     this.guard(`scroll:${direction}`)
+  }
+
+  async userType(text: string): Promise<void> {
+    this.calls.push(`userType:${text}`)
+    for (const ch of text) this.typedChars.push(ch)
+  }
+
+  async userPress(key: string): Promise<void> {
+    this.calls.push(`userPress:${key}`)
+  }
+
+  async userScroll(direction: "up" | "down"): Promise<void> {
+    this.calls.push(`userScroll:${direction}`)
   }
 
   async fill(selector: string, text: string): Promise<void> {

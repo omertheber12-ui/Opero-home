@@ -1,10 +1,11 @@
 import type { Page } from "playwright"
+import { CONTROL_NAME_LIMIT, MAX_CONTROLS } from "../config.js"
 import type { PageControl } from "../domain/types.js"
 
 type RawControl = { ref: number; role: string; name: string }
 
 export async function collectControls(page: Page): Promise<PageControl[]> {
-  return page.evaluate(() => {
+  return page.evaluate(({ nameLimit, maxControls }) => {
     const ATTR = "data-opero-ref"
     for (const old of document.querySelectorAll(`[${ATTR}]`)) old.removeAttribute(ATTR)
 
@@ -38,16 +39,16 @@ export async function collectControls(page: Page): Promise<PageControl[]> {
       )
         .replace(/\s+/g, " ")
         .trim()
-        .slice(0, 80)
+        .slice(0, nameLimit)
       if (!name) continue
 
       el.setAttribute(ATTR, String(next))
       out.push({ ref: next, role, name })
       next += 1
-      if (out.length >= 80) break
+      if (out.length >= maxControls) break
     }
     return out
-  })
+  }, { nameLimit: CONTROL_NAME_LIMIT, maxControls: MAX_CONTROLS })
 }
 
 export function formatControls(controls: PageControl[]): string {

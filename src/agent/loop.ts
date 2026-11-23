@@ -1,5 +1,16 @@
 import type { Computer } from "../computer/computer.js"
-import { isGoogleChallenge } from "../computer/challenge.js"
+import { isBotChallenge } from "../computer/challenge.js"
+import type { StatusBoard, WorkPhase } from "./work-status.js"
+import {
+  ACTION_WAIT_DEFAULT_MS,
+  ACTION_WAIT_MAX_MS,
+  EMPTY_PAGE_WAIT_MS,
+  EMPTY_PAGE_WAITS,
+  MAX_TURNS,
+  QUEUED_MESSAGE,
+  UNREAD_ACTION,
+  UNREAD_PLAN,
+} from "../config.js"
 import { isBlankUrl, toHttpUrl } from "../computer/url.js"
 import { evidenceOnPage, groundedEvidence, visibleEvidence } from "../domain/evidence.js"
 import { forceAsk } from "../domain/guard.js"
@@ -17,6 +28,7 @@ export type LoopEvent =
   | { type: "question"; question: string; reason: AskReason }
   | { type: "status"; status: Mission["status"] }
   | { type: "driver"; driver: "agent" | "user" }
+  | { type: "thinking"; text: string }
 
 type Deps = {
   planner: Planner
@@ -26,6 +38,7 @@ type Deps = {
   level: Level
   language: Language
   emit: (event: LoopEvent) => void
+  status?: StatusBoard
 }
 
 export class HouseLoop {
@@ -54,7 +67,7 @@ export class HouseLoop {
     this.deps.emit({ type: "message", role: "user", text: request })
     if (!canStart(this.mission)) {
       this.queue.push(request)
-      this.deps.emit({ type: "message", role: "agent", text: "Queued until the current mission finishes." })
+      this.deps.emit({ type: "message", role: "agent", text: QUEUED_MESSAGE })
       return
     }
     await this.start(request)
@@ -126,6 +139,8 @@ export class HouseLoop {
     this.recent = []
     this.notes = []
     this.mission = blankMission(`m${this.id++}`, request, this.level)
+    this.think("Planning…")
+    this.noteStatus("planning", "Planning the mission")
     let planned: { end: string; steps: Step[] }
     try {
       planned = await this.deps.planner.plan({ request, language: this.language })
@@ -139,6 +154,8 @@ export class HouseLoop {
     }
     this.mission = withPlan(this.mission, planned.end, planned.steps)
     this.deps.emit({ type: "plan", mission: this.mission })
+    this.think("Opening the computer…")
+    this.noteStatus("browsing", "Opening the computer")
     try {
       await this.deps.computer.wake()
     } catch (error) {
@@ -156,7 +173,7 @@ export class HouseLoop {
 
   private async pursue(): Promise<void> {
     if (!this.mission) return
-    for (let turn = 0; turn < 40; turn += 1) {
+    for (let turn = 0; turn < MAX_TURNS; turn += 1) {
       if (this.driver === "user" || this.mission.status !== "running") return
 
       const snap = await this.deps.computer.snapshot()
@@ -169,6 +186,8 @@ export class HouseLoop {
       const step = this.mission.steps.find((item) => item.status !== "done")
       const bootTarget = step ? toHttpUrl(step.site) : null
       if (isBlankUrl(url) && bootTarget) {
+        this.think(`Opening ${bootTarget}`)
+        this.noteStatus("browsing", `Opening ${bootTarget}`, false, "goto")
         this.deps.emit({ type: "message", role: "agent", text: `Opening ${bootTarget}` })
         const stopped = await this.apply({ type: "goto", url: bootTarget }, pageText, url, controls.length)
         if (stopped) return
@@ -177,9 +196,9 @@ export class HouseLoop {
 
       if (!isBlankUrl(url) && pageText.trim().length === 0 && controls.length === 0) {
         this.emptyPageWaits += 1
-        if (this.emptyPageWaits <= 2) {
+        if (this.emptyPageWaits <= EMPTY_PAGE_WAITS) {
           this.notes.push("PAGE_DATA is empty. Wait for the page to load, then continue. Do not invent a done summary.")
-          await this.apply({ type: "wait", ms: 800 }, pageText, url, controls.length)
+          await this.apply({ type: "wait", ms: EMPTY_PAGE_WAIT_MS }, pageText, url, controls.length)
           continue
         }
         this.emptyPageWaits = 0
@@ -268,7 +287,7 @@ export class HouseLoop {
           this.deps.emit({ type: "plan", mission: this.mission })
           continue
         }
-        if (verdict.type === "ask" && verdict.question === "I could not read the planner reply.") {
+        if (verdict.type === "ask" && verdict.question === UNREAD_PLAN) {
           this.notes.push("Continue toward the end. Prefer click/type with CONTROLS numbers.")
           continue
         }
@@ -299,6 +318,7 @@ export class HouseLoop {
         this.ask("This step submits, deletes, sends, or changes an account. Should I continue?", "commit")
         return
       }
+      this.noteStatus("browsing", "Choosing the next action", false, action.type)
       const stopped = await this.apply(action, pageText, url, controls.length)
       if (stopped) return
     }
@@ -330,6 +350,7 @@ export class HouseLoop {
     controlCount = 0,
   ): Promise<boolean> {
     if (!this.mission) return true
+    if (this.driver === "user") return true
     this.clickInFlight = true
     try {
       if (action.type === "goto") {
@@ -370,7 +391,7 @@ export class HouseLoop {
       if (action.type === "press") await this.deps.computer.press(action.key)
       if (action.type === "scroll") await this.deps.computer.scroll(action.direction)
       if (action.type === "wait") {
-        await new Promise((resolve) => setTimeout(resolve, Math.min(action.ms ?? 1000, 5000)))
+        await new Promise((resolve) => setTimeout(resolve, Math.min(action.ms ?? ACTION_WAIT_DEFAULT_MS, ACTION_WAIT_MAX_MS)))
       }
       if (action.type === "fill_detail") {
         const status = this.deps.vault.fillDetail(action.description)
@@ -418,6 +439,7 @@ export class HouseLoop {
         this.deps.emit({ type: "message", role: "agent", text: quoted })
         this.deps.emit({ type: "status", status: "done" })
         this.deps.emit({ type: "plan", mission: this.mission })
+        this.noteStatus("done", "Mission finished", false, "done")
         return true
       }
       this.previousAction = action
@@ -447,18 +469,38 @@ export class HouseLoop {
   }
 
   private handBrowserToUser(url: string, pageText: string): boolean {
-    if (!isGoogleChallenge(url, pageText)) return false
+    if (!isBotChallenge(url, pageText)) return false
     const view = this.deps.computer.liveView()
     this.setDriver("user")
+    this.think("Bot check — handing you the browser")
+    this.noteStatus("challenge", "Waiting for a person to finish the check", true)
     this.deps.emit({ type: "driver", driver: "user" })
     this.deps.emit({
       type: "message",
       role: "agent",
       text: view
-        ? `Google is checking that a person is here. Open the live view, click the checkbox, then press I'm done.\n${view}`
-        : "Google is checking that a person is here. Take control on the Computer picture, click the checkbox, then press I'm done.",
+        ? `A site is checking that a person is here. Open the live view, finish the check, then press I'm done.\n${view}`
+        : "A site is checking that a person is here. Take control on the Computer picture, finish the check, then press I'm done.",
     })
     return true
+  }
+
+  private think(text: string): void {
+    this.deps.emit({ type: "thinking", text })
+  }
+
+  private noteStatus(phase: WorkPhase, detail: string, challenge = false, lastAction = ""): void {
+    if (!this.mission || !this.deps.status) return
+    const step = this.mission.steps.find((item) => item.status !== "done")
+    this.deps.status.set({
+      missionId: this.mission.id,
+      phase,
+      stepHint: step?.text ?? "",
+      lastAction,
+      challenge,
+      updatedAt: Date.now(),
+      detail,
+    })
   }
 
   private block(text: string): void {
@@ -466,6 +508,7 @@ export class HouseLoop {
     this.mission = { ...this.mission, status: "blocked", questionReason: "machine" }
     this.deps.emit({ type: "message", role: "agent", text })
     this.deps.emit({ type: "status", status: "blocked" })
+    this.noteStatus("blocked", text)
   }
 
   private ask(question: string, reason: AskReason): void {
@@ -473,6 +516,7 @@ export class HouseLoop {
     this.mission = { ...this.mission, status: "waiting_on_user", question, questionReason: reason }
     this.deps.emit({ type: "question", question, reason })
     this.deps.emit({ type: "status", status: "waiting_on_user" })
+    this.noteStatus("waiting", question)
   }
 
   private async drain(): Promise<void> {
@@ -489,8 +533,6 @@ function questionFor(reason: AskReason): string {
   if (reason === "commit") return "This step submits, deletes, sends, or changes an account. Should I continue?"
   return "I need a decision before I continue."
 }
-
-const UNREAD_ACTION = "I could not read the next action."
 
 /** Avoid finishing on a vague end-check sentence that happens to appear as planning text. */
 function evidenceLooksLikeAnswer(evidence: string, end: string): boolean {

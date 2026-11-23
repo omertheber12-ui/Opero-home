@@ -4,25 +4,38 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { WebSocketServer, type WebSocket } from "ws"
 import { HouseLoop, type LoopEvent } from "../agent/loop.js"
+import { createStatusBoard } from "../agent/work-status.js"
 import { createExecutor, type Executor } from "../agent/executor.js"
 import { createPlanner, type Planner } from "../agent/planner.js"
 import { loadEnvFile } from "../boot/env.js"
 import { ensureVaultKey, loadBrowserbaseKey, loadXaiKey, saveXaiKey, verifyXaiKey } from "../boot/secrets.js"
 import { FakeComputer } from "../computer/computer.js"
 import { openChrome } from "../computer/playwright-computer.js"
+import { jpegSize } from "../computer/jpeg-size.js"
 import type { Computer } from "../computer/computer.js"
 import type { Language, Level } from "../domain/types.js"
 import { labels } from "./i18n.js"
+import {
+  BIND_HOST,
+  DEFAULT_MODEL,
+  DEFAULT_PORT,
+  MISSING_GROK_KEY,
+  MISSING_GROK_KEY_ASK,
+  MISSING_GROK_KEY_SHORT,
+  SCREEN_INTERVAL_MS,
+  VIEWPORT_HEIGHT,
+  VIEWPORT_WIDTH,
+} from "../config.js"
 import { openHouse, saveHouse, withSettings } from "../store/house-store.js"
 import { loadKey, Vault } from "../vault/vault.js"
 
 await loadEnvFile()
 
-const port = Number(process.env.PORT ?? 8787)
+const port = Number(process.env.PORT ?? DEFAULT_PORT)
 const dataDir = process.env.OPERO_DATA_DIR ?? join(process.cwd(), "data")
 const mode = process.env.MODEL ?? "live"
-const plannerModel = process.env.OPERO_PLANNER_MODEL ?? "grok-4.7"
-const actorModel = process.env.OPERO_ACTOR_MODEL ?? "grok-4.7"
+const plannerModel = process.env.OPERO_PLANNER_MODEL ?? DEFAULT_MODEL
+const actorModel = process.env.OPERO_ACTOR_MODEL ?? DEFAULT_MODEL
 const root = dirname(fileURLToPath(import.meta.url))
 const pagePath = join(root, "../../public/index.html")
 
@@ -68,10 +81,10 @@ function fakeExecutor(): Executor {
 function missingKeyPlanner(): Planner {
   return {
     async plan() {
-      throw new Error("Add your Grok API key in the setup card to run live missions.")
+      throw new Error(MISSING_GROK_KEY)
     },
     async review() {
-      return { type: "ask", question: "Add your Grok API key first.", reason: "machine" }
+      return { type: "ask", question: MISSING_GROK_KEY_ASK, reason: "machine" }
     },
   }
 }
@@ -79,7 +92,7 @@ function missingKeyPlanner(): Planner {
 function missingKeyExecutor(): Executor {
   return {
     async next() {
-      throw new Error("Add your Grok API key in the setup card to run live missions.")
+      throw new Error(MISSING_GROK_KEY)
     },
   }
 }
@@ -116,6 +129,7 @@ function vaultState(): { type: "vault"; items: string[] } {
   return { type: "vault", items: vault.descriptions() }
 }
 
+const workStatus = createStatusBoard()
 const loop = new HouseLoop({
   planner: brain.planner,
   executor: brain.executor,
@@ -123,6 +137,7 @@ const loop = new HouseLoop({
   vault,
   level: house.level,
   language: house.language,
+  status: workStatus,
   emit(event: LoopEvent) {
     broadcast(event)
     void saveHouse(dataDir, house, loop.mission)
@@ -159,6 +174,7 @@ async function onMessage(socket: WebSocket, raw: string): Promise<void> {
     x?: number
     y?: number
     key?: string
+    direction?: "up" | "down"
     description?: string
     value?: string
   }
@@ -190,7 +206,7 @@ async function onMessage(socket: WebSocket, raw: string): Promise<void> {
   }
   if (event.type === "mission" && event.text) {
     if (mode !== "fake" && !xaiKey) {
-      send(socket, { type: "message", role: "agent", text: "Add your Grok API key in the setup card first." })
+      send(socket, { type: "message", role: "agent", text: MISSING_GROK_KEY_SHORT })
       return
     }
     loop.level = house.level
@@ -215,8 +231,26 @@ async function onMessage(socket: WebSocket, raw: string): Promise<void> {
     broadcast({ type: "driver", driver: event.text })
     if (event.text === "agent") await loop.resume()
   }
-  if (event.type === "click" && loop.driver === "user" && typeof event.x === "number" && typeof event.y === "number") {
-    await computer.pointer(event.x, event.y).catch(() => undefined)
+  if (event.type === "work_status") {
+    send(socket, { type: "work_status", status: workStatus.get() })
+    return
+  }
+  if (loop.driver !== "user") return
+  try {
+    if (event.type === "click" && typeof event.x === "number" && typeof event.y === "number") {
+      await computer.pointer(event.x, event.y)
+    }
+    if (event.type === "scroll" && (event.direction === "up" || event.direction === "down")) {
+      await computer.userScroll(event.direction)
+    }
+    if (event.type === "type" && event.text) await computer.userType(event.text)
+    if (event.type === "press" && event.key) await computer.userPress(event.key)
+  } catch (error) {
+    send(socket, {
+      type: "message",
+      role: "agent",
+      text: error instanceof Error ? error.message : "The computer did not take that input.",
+    })
   }
 }
 
@@ -263,17 +297,18 @@ setInterval(() => {
     .screenshot()
     .then((image) => {
       if (image.length === 0) return
-      broadcast({ type: "screen", image: image.toString("base64") })
+      const size = jpegSize(image) ?? { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT }
+      broadcast({ type: "screen", image: image.toString("base64"), width: size.width, height: size.height })
     })
     .catch(() => undefined)
-}, 1000)
+}, SCREEN_INTERVAL_MS)
 
-server.listen(port, "127.0.0.1", () => {
+server.listen(port, BIND_HOST, () => {
   const waiting = [
     xaiKey || mode === "fake" ? "" : "waiting for Grok key",
     browserbaseKey || mode === "fake" ? "" : "waiting for Browserbase key",
   ].filter(Boolean)
-  console.log(`Opero Home → http://127.0.0.1:${port} (${mode}${waiting.length ? `, ${waiting.join(", ")}` : ""})`)
+  console.log(`Opero Home → http://${BIND_HOST}:${port} (${mode}${waiting.length ? `, ${waiting.join(", ")}` : ""})`)
 })
 
 export { server }

@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto"
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
+import { XAI_MODELS_URL } from "../config.js"
 
 export async function ensureVaultKey(dataDir: string): Promise<string> {
   if (process.env.OPERO_VAULT_KEY) return process.env.OPERO_VAULT_KEY
@@ -59,7 +60,7 @@ export async function saveXaiKey(dataDir: string, key: string): Promise<void> {
 }
 
 export async function verifyXaiKey(key: string): Promise<{ ok: true } | { ok: false; status: number; detail: string }> {
-  const response = await fetch("https://api.x.ai/v1/models", {
+  const response = await fetch(XAI_MODELS_URL, {
     headers: { Authorization: `Bearer ${key}` },
   })
   if (response.ok) return { ok: true }

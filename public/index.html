@@ -230,6 +230,12 @@
         border-color: rgba(0, 201, 183, 0.3);
       }
       .msg.agent { align-self: flex-start; }
+      .msg.thinking {
+        align-self: flex-start;
+        color: var(--muted);
+        font-style: italic;
+        background: transparent;
+      }
       .composer-wrap {
         padding: 12px 14px 14px;
         border-top: 1px solid var(--line);
@@ -286,7 +292,7 @@
         background:
           linear-gradient(180deg, rgba(0, 201, 183, 0.05), transparent 40%),
           #070b14;
-        aspect-ratio: 1280 / 800;
+        aspect-ratio: 1280 / 800; /* VIEWPORT_WIDTH / VIEWPORT_HEIGHT */
         box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
       }
       #screen {
@@ -455,7 +461,7 @@
             <h2 id="screen-heading">Computer</h2>
           </div>
           <div class="screen-frame">
-            <img id="screen" alt="" hidden />
+            <img id="screen" alt="" hidden tabindex="0" />
             <div class="screen-idle" id="screen-idle">
               <div>
                 <strong id="idle-title">Computer</strong>
@@ -529,6 +535,10 @@
       let labels = {}
       let hasScreen = false
       let vaultItems = []
+      const VIEWPORT_WIDTH = 1280
+      const VIEWPORT_HEIGHT = 800
+      let screenWidth = VIEWPORT_WIDTH
+      let screenHeight = VIEWPORT_HEIGHT
 
       const socket = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host)
       const send = (event) => {
@@ -563,9 +573,14 @@
           keyMsg.textContent = message.message || ""
           document.querySelector("#key-save").disabled = message.ok === null
         }
-        if (message.type === "message") add(message.role, message.text)
+        if (message.type === "message") {
+          clearThinking()
+          add(message.role, message.text)
+        }
+        if (message.type === "thinking") showThinking(message.text)
         if (message.type === "question") {
           waiting = true
+          clearThinking()
           add("agent", message.question)
           setMissionStatus("waiting_on_user")
         }
@@ -579,6 +594,8 @@
           screen.hidden = false
           screen.alt = labels.screen || "Computer"
           screen.src = "data:image/jpeg;base64," + message.image
+          if (message.width) screenWidth = message.width
+          if (message.height) screenHeight = message.height
           screenIdle.classList.add("hidden")
         }
         if (message.type === "driver") {
@@ -617,6 +634,7 @@
         driver = "user"
         updateDriverUi()
         send({ type: "driver", text: "user" })
+        screen.focus()
       })
       document.querySelector("#hand").addEventListener("click", () => {
         driver = "agent"
@@ -652,12 +670,60 @@
       })
       screen.addEventListener("click", (event) => {
         if (driver !== "user") return
-        const box = screen.getBoundingClientRect()
-        if (!box.width || !box.height) return
-        const x = Math.round((event.clientX - box.left) * (1280 / box.width))
-        const y = Math.round((event.clientY - box.top) * (800 / box.height))
-        send({ type: "click", x, y })
+        const point = mapPictureClick(event.clientX, event.clientY)
+        if (!point) return
+        send({ type: "click", x: point.x, y: point.y })
       })
+      screen.addEventListener("wheel", (event) => {
+        if (driver !== "user") return
+        event.preventDefault()
+        send({ type: "scroll", direction: event.deltaY > 0 ? "down" : "up" })
+      }, { passive: false })
+      screen.addEventListener("keydown", (event) => {
+        if (driver !== "user") return
+        if (event.key === "Enter" || event.key === "Tab" || event.key === "Backspace") {
+          event.preventDefault()
+          send({ type: "press", key: event.key })
+          return
+        }
+        if (event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
+          event.preventDefault()
+          send({ type: "type", text: event.key })
+        }
+      })
+
+      function mapPictureClick(clientX, clientY) {
+        const box = screen.getBoundingClientRect()
+        if (!box.width || !box.height || !screenWidth || !screenHeight) return null
+        const scale = Math.min(box.width / screenWidth, box.height / screenHeight)
+        const drawnWidth = screenWidth * scale
+        const drawnHeight = screenHeight * scale
+        const offsetX = (box.width - drawnWidth) / 2
+        const offsetY = (box.height - drawnHeight) / 2
+        const localX = clientX - box.left - offsetX
+        const localY = clientY - box.top - offsetY
+        if (localX < 0 || localY < 0 || localX > drawnWidth || localY > drawnHeight) return null
+        return {
+          x: Math.round(localX / scale),
+          y: Math.round(localY / scale),
+        }
+      }
+
+      function showThinking(text) {
+        let line = document.querySelector("#thinking")
+        if (!line) {
+          line = document.createElement("div")
+          line.id = "thinking"
+          line.className = "msg thinking"
+          thread.append(line)
+        }
+        line.textContent = text
+        thread.scrollTop = thread.scrollHeight
+      }
+
+      function clearThinking() {
+        document.querySelector("#thinking")?.remove()
+      }
 
       function add(role, text) {
         const row = document.createElement("div")

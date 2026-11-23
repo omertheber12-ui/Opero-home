@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { HouseLoop, type LoopEvent } from "../src/agent/loop.js"
+import { createStatusBoard, type StatusBoard } from "../src/agent/work-status.js"
 import type { Executor } from "../src/agent/executor.js"
 import type { Planner } from "../src/agent/planner.js"
 import { FakeComputer } from "../src/computer/computer.js"
@@ -48,7 +49,7 @@ async function run(
   level: 1 | 2,
   actions: AgentAction[],
   reviews: Verdict[] = [],
-  options: { pageTextAfterGoto?: string; events?: LoopEvent[] } = {},
+  options: { pageTextAfterGoto?: string; events?: LoopEvent[]; status?: StatusBoard } = {},
 ) {
   const dir = await mkdtemp(join(tmpdir(), "opero-loop-"))
   const computer = new FakeComputer(dir)
@@ -64,6 +65,7 @@ async function run(
     vault: new Vault(join(dir, "vault.json"), loadKey(randomBytes(32).toString("base64"))),
     level,
     language: "en",
+    status: options.status,
     emit: (event) => options.events?.push(event),
   })
   const wake = computer.wake.bind(computer)
@@ -407,6 +409,59 @@ describe("mission loop", () => {
     expect(loop.driver).toBe("user")
     expect(loop.mission?.status).toBe("running")
     expect(events.some((event) => event.type === "message" && event.text.includes("live view"))).toBe(true)
+    expect(events.some((event) => event.type === "thinking" && event.text.includes("Bot check"))).toBe(true)
     expect(events.some((event) => event.type === "driver" && event.driver === "user")).toBe(true)
+  })
+
+  it("hands the browser over on a security verification page before the next click", async () => {
+    const events: LoopEvent[] = []
+    const status = createStatusBoard()
+    const { loop, computer } = await run(2, [{ type: "click", ref: 1, commit: false }], [], {
+      pageTextAfterGoto: "Performing security verification",
+      events,
+      status,
+    })
+    expect(loop.driver).toBe("user")
+    expect(computer.calls.filter((call) => call.startsWith("clickRef"))).toEqual([])
+    expect(events.some((event) => event.type === "message" && event.text.includes("https://live.example/view"))).toBe(true)
+    expect(status.get()?.challenge).toBe(true)
+    expect(status.get()?.phase).toBe("challenge")
+  })
+
+  it("keeps driving when the page only says it is loading", async () => {
+    const { loop, computer } = await run(2, [{ type: "click", ref: 1, commit: false }], [], {
+      pageTextAfterGoto: "Just a moment…",
+    })
+    expect(loop.driver).toBe("agent")
+    expect(computer.calls.some((call) => call.startsWith("clickRef"))).toBe(true)
+  })
+
+  it("does not click after the user takes control during the model call", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "opero-loop-"))
+    const computer = new FakeComputer(dir)
+    computer.text = ""
+    computer.controls = [{ ref: 1, role: "button", name: "Go" }]
+    const loop = new HouseLoop({
+      planner: planner([]),
+      executor: {
+        async next() {
+          loop.setDriver("user")
+          return { type: "click", ref: 1, commit: false }
+        },
+      },
+      computer,
+      vault: new Vault(join(dir, "vault.json"), loadKey(randomBytes(32).toString("base64"))),
+      level: 2,
+      language: "en",
+      emit: () => undefined,
+    })
+    const goto = computer.goto.bind(computer)
+    computer.goto = async (url: string) => {
+      await goto(url)
+      computer.text = "welcome"
+    }
+    await loop.acceptMission("Open the site and stop when the heading is visible")
+    expect(loop.driver).toBe("user")
+    expect(computer.calls.filter((call) => call.startsWith("clickRef"))).toEqual([])
   })
 })

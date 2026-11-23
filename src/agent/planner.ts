@@ -1,3 +1,4 @@
+import { ACTION_WAIT_DEFAULT_MS, UNREAD_ACTION, UNREAD_PLAN } from "../config.js"
 import { complete, SYSTEM_TEXT, type ChatMessage } from "../model/chat-client.js"
 import type { AgentAction, Language, Step, Verdict } from "../domain/types.js"
 
@@ -67,7 +68,7 @@ export function parseVerdict(value: unknown): Verdict {
     const steps = Array.isArray(record.steps) ? record.steps.map(parseStep) : []
     return { type: "replan", steps }
   }
-  return { type: "ask", question: "I could not read the planner reply.", reason: "verify" }
+  return { type: "ask", question: UNREAD_PLAN, reason: "verify" }
 }
 
 function parseStep(value: unknown, index: number): Step {
@@ -97,7 +98,7 @@ export function parseAction(value: unknown): AgentAction {
   if (record.type === "scroll" && (record.direction === "up" || record.direction === "down")) {
     return { type: "scroll", direction: record.direction }
   }
-  if (record.type === "wait") return { type: "wait", ms: typeof record.ms === "number" ? record.ms : 1000 }
+  if (record.type === "wait") return { type: "wait", ms: typeof record.ms === "number" ? record.ms : ACTION_WAIT_DEFAULT_MS }
   if (record.type === "pointer_click") {
     return { type: "pointer_click", x: numberOr(record.x), y: numberOr(record.y), commit: record.commit === true }
   }
@@ -117,7 +118,7 @@ export function parseAction(value: unknown): AgentAction {
       reason: "fact",
     }
   }
-  return { type: "ask", question: "I could not read the next action.", reason: "verify" }
+  return { type: "ask", question: UNREAD_ACTION, reason: "verify" }
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

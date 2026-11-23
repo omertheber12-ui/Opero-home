@@ -3,9 +3,20 @@ import { loadBrowserbaseKey } from "../boot/secrets.js"
 import { AgentFrozen, type Computer, type PageSnapshot } from "./computer.js"
 import { browserbaseApi, openCloudSession, type BrowserbaseApi } from "./browserbase.js"
 import { collectControls } from "./snapshot.js"
+import {
+  BLANK_URL,
+  CHAR_DELAY_MS,
+  MIN_PAGE_TEXT,
+  MISSING_BROWSERBASE_KEY,
+  NAV_TIMEOUT_MS,
+  PAGE_TEXT_WAIT_MS,
+  SCREENSHOT_QUALITY,
+  SCROLL_DELTA,
+  VIEWPORT_HEIGHT,
+  VIEWPORT_WIDTH,
+} from "../config.js"
 
-const CHAR_DELAY_MS = 45
-const MISSING_KEY = "Add BROWSERBASE_API_KEY to .env. Live mode uses Browserbase Chrome."
+const MISSING_KEY = MISSING_BROWSERBASE_KEY
 
 export type CloudDeps = {
   apiKey?: string
@@ -30,6 +41,11 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
   const requirePage = (): Page => {
     if (!page) throw new Error("Browser page is not open")
     return page
+  }
+
+  const wheel = async (direction: "up" | "down") => {
+    const delta = direction === "down" ? SCROLL_DELTA : -SCROLL_DELTA
+    await requirePage().mouse.wheel(0, delta)
   }
 
   const typeHuman = async (text: string) => {
@@ -61,6 +77,7 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
       liveViewUrl = opened.liveView
       context = browser.contexts()[0] ?? (await browser.newContext())
       page = context.pages()[0] ?? (await context.newPage())
+      await page.setViewportSize({ width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT })
     },
     async close() {
       await browser?.close().catch(() => undefined)
@@ -74,7 +91,7 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
     async screenshot() {
       if (!page) return Buffer.from("")
       try {
-        return await page.screenshot({ type: "jpeg", quality: 60 })
+        return await page.screenshot({ type: "jpeg", quality: SCREENSHOT_QUALITY })
       } catch {
         return Buffer.from("")
       }
@@ -84,10 +101,10 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
       return page.locator("body").innerText().catch(() => "")
     },
     async url() {
-      return page?.url() ?? "about:blank"
+      return page?.url() ?? BLANK_URL
     },
     async snapshot(): Promise<PageSnapshot> {
-      if (!page) return { url: "about:blank", text: "", controls: [] }
+      if (!page) return { url: BLANK_URL, text: "", controls: [] }
       const [url, text, controls] = await Promise.all([
         Promise.resolve(page.url()),
         page.locator("body").innerText().catch(() => ""),
@@ -98,10 +115,10 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
     async goto(url: string) {
       freeze()
       const current = requirePage()
-      await current.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 })
+      await current.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS })
       await current
-        .waitForFunction(() => (document.body?.innerText?.trim().length ?? 0) >= 40, null, {
-          timeout: 8000,
+        .waitForFunction((min: number) => (document.body?.innerText?.trim().length ?? 0) >= min, MIN_PAGE_TEXT, {
+          timeout: PAGE_TEXT_WAIT_MS,
         })
         .catch(() => undefined)
     },
@@ -139,8 +156,16 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
     },
     async scroll(direction: "up" | "down") {
       freeze()
-      const delta = direction === "down" ? 600 : -600
-      await requirePage().mouse.wheel(0, delta)
+      await wheel(direction)
+    },
+    async userType(text: string) {
+      await typeHuman(text)
+    },
+    async userPress(key: string) {
+      await requirePage().keyboard.press(key)
+    },
+    async userScroll(direction: "up" | "down") {
+      await wheel(direction)
     },
     async fill(selector: string, text: string) {
       freeze()

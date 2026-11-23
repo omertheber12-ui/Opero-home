@@ -44,5 +44,5 @@ npm test
 - Each turn the actor gets a numbered list of visible controls and clicks by number. Typing moves the pointer and enters one character at a time. Pixel clicks are fallback only.
 - The finish gate posts only page-grounded lines to chat. A paraphrased `done` is recovered from the page or nudged to click/scroll/copy — not accepted as a summary.
 - Open **Vault** in the header to save a detail by the case it fits. The value is never shown in chat or sent to the model.
-- If Google shows a check, Opero pauses and sends the Browserbase live view. Click the checkbox there, then press I'm done.
+- If a site asks for a person (Google, Cloudflare, or a security verification page), Opero pauses and sends the Browserbase live view. Finish the check there, or take control of the Computer picture, then press I'm done.
 - Secrets under `data/` and `.env` stay local and are gitignored.
