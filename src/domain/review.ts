@@ -1,5 +1,6 @@
 import type { AgentAction } from "./types.js"
 
+/** Planner review is only for a stuck repeated action. Ordinary clicks, done, and asks stay with the actor. */
 export function needsPlannerReview(input: {
   action: AgentAction
   url: string
@@ -7,8 +8,6 @@ export function needsPlannerReview(input: {
   previousAction: AgentAction | null
 }): boolean {
   const { action, url, previousUrl, previousAction } = input
-  if (action.type === "done" || action.type === "ask") return true
-  if ((action.type === "click" || action.type === "type") && action.commit) return true
   if (previousAction && previousUrl === url && sameAction(previousAction, action)) return true
   return false
 }

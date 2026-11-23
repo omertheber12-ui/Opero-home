@@ -1,0 +1,23 @@
+---
+description: Plans must open with a mermaid diagram of the big picture
+alwaysApply: true
+---
+
+# Plan diagrams
+
+When you write or update a plan in Plan mode, or edit a `.plan.md` file, put one mermaid diagram near the top, before the long explanation and before code.
+
+The diagram is the big picture. A reader should see who talks to whom and what changes, without reading the prose.
+
+- One diagram. Add a second only when the first cannot show a separate flow.
+- Use words a person would say. Leave out function signatures, flag lists, and file paths.
+- Prefer `flowchart` with a few nodes. Label edges with the action.
+- Keep the written plan. The diagram does not replace the steps.
+
+```mermaid
+flowchart LR
+  person[You] --> app[Opero]
+  app --> browser[Browser]
+  browser --> site[Website]
+  site -->|page| app
+```

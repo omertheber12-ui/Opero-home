@@ -42,7 +42,8 @@ export function gate(mission: Mission, action: AgentAction): "run" | "ask" {
   if (action.type === "fill_detail") {
     return mission.failedDetails.includes(action.description) ? "ask" : "run"
   }
-  const commit = (action.type === "click" || action.type === "type") && action.commit
+  const commit =
+    ((action.type === "click" || action.type === "type" || action.type === "pointer_click") && action.commit)
   if (!commit) return "run"
   if (mission.submits >= 1) return "ask"
   if (mission.level === 1) return "ask"

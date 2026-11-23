@@ -56,8 +56,19 @@ export class Vault {
       iv: iv.toString("base64"),
       tag: tag.toString("base64"),
     })
-    await mkdir(dirname(this.filePath), { recursive: true })
-    await writeFile(this.filePath, JSON.stringify(this.entries, null, 2))
+    await this.persist()
+  }
+
+  async remove(description: string): Promise<boolean> {
+    const before = this.entries.length
+    this.entries = this.entries.filter((entry) => entry.description !== description)
+    if (this.entries.length === before) return false
+    await this.persist()
+    return true
+  }
+
+  descriptions(): string[] {
+    return this.entries.map((entry) => entry.description)
   }
 
   fillDetail(description: string): { status: "filled" } | { status: "missing" } {
@@ -74,6 +85,11 @@ export class Vault {
 
   values(): string[] {
     return this.entries.map((entry) => this.decrypt(entry))
+  }
+
+  private async persist(): Promise<void> {
+    await mkdir(dirname(this.filePath), { recursive: true })
+    await writeFile(this.filePath, JSON.stringify(this.entries, null, 2))
   }
 
   private decrypt(entry: Entry): string {

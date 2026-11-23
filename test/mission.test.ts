@@ -52,8 +52,8 @@ describe("mission rules", () => {
   it("asks on level 1 commits and runs ordinary clicks", () => {
     const level1 = withPlan(blankMission("m1", "go", 1), "end", [step()])
     const level2 = withPlan(blankMission("m2", "go", 2), "end", [step()])
-    const commit = { type: "click" as const, x: 1, y: 1, commit: true }
-    const reading = { type: "click" as const, x: 1, y: 1, commit: false }
+    const commit = { type: "click" as const, ref: 1, commit: true }
+    const reading = { type: "click" as const, ref: 1, commit: false }
     expect(gate(level1, commit)).toBe("ask")
     expect(gate(level1, reading)).toBe("run")
     expect(gate(level2, reading)).toBe("run")
@@ -61,7 +61,7 @@ describe("mission rules", () => {
 
   it("runs a level 2 commit unless one already happened or the step is paused", () => {
     const mission = withPlan(blankMission("m1", "go", 2), "end", [step({ status: "running" })])
-    const commit = { type: "click" as const, x: 1, y: 1, commit: true }
+    const commit = { type: "click" as const, ref: 1, commit: true }
     expect(gate(mission, commit)).toBe("run")
     expect(gate({ ...mission, submits: 1 }, commit)).toBe("ask")
     const paused = withPlan(blankMission("m2", "go", 2), "end", [step({ status: "running", pause: true })])

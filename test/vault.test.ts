@@ -43,4 +43,17 @@ describe("vault", () => {
     const other = new Vault(file, loadKey(randomBytes(32).toString("base64")))
     await expect(other.load()).rejects.toThrow()
   })
+
+  it("lists descriptions without values and removes by description", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "opero-vault-"))
+    dirs.push(dir)
+    const vault = new Vault(join(dir, "vault.json"), loadKey(randomBytes(32).toString("base64")))
+    await vault.save("CNBC password", "secret-value")
+    const listed = vault.descriptions()
+    expect(listed).toEqual(["CNBC password"])
+    expect(JSON.stringify(listed)).not.toContain("secret-value")
+    expect(await vault.remove("CNBC password")).toBe(true)
+    expect(vault.descriptions()).toEqual([])
+  })
 })
+

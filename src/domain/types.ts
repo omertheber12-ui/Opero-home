@@ -37,11 +37,21 @@ export type AskReason =
   | "wrong_account"
   | "machine"
 
+export type PageControl = {
+  ref: number
+  role: string
+  name: string
+}
+
 export type AgentAction =
   | { type: "goto"; url: string }
-  | { type: "click"; x: number; y: number; commit: boolean }
-  | { type: "type"; text: string; commit: boolean }
-  | { type: "fill_detail"; description: string }
+  | { type: "click"; ref: number; commit: boolean }
+  | { type: "type"; ref: number; text: string; commit: boolean }
+  | { type: "press"; key: string }
+  | { type: "scroll"; direction: "up" | "down" }
+  | { type: "wait"; ms?: number }
+  | { type: "pointer_click"; x: number; y: number; commit: boolean }
+  | { type: "fill_detail"; description: string; ref?: number }
   | { type: "read_cookies" }
   | { type: "ask"; question: string; reason: AskReason }
   | { type: "done"; evidence: string }

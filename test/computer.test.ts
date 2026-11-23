@@ -22,4 +22,15 @@ describe("computer", () => {
     const info = await stat(dir)
     expect(info.isDirectory()).toBe(true)
   })
+
+  it("clicks and types by control number one character at a time", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "opero-profile-"))
+    dirs.push(dir)
+    const computer = new FakeComputer(dir)
+    computer.controls = [{ ref: 4, role: "textbox", name: "Search" }]
+    await computer.typeRef(4, "hi")
+    expect(computer.calls).toContain("typeRef:4")
+    expect(computer.typedChars).toEqual(["h", "i"])
+    await expect(computer.clickRef(99)).rejects.toThrow(/not on this page/)
+  })
 })

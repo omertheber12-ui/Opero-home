@@ -1,8 +1,16 @@
+import type { PageControl } from "../domain/types.js"
+
 export class AgentFrozen extends Error {
   constructor() {
     super("AgentFrozen")
     this.name = "AgentFrozen"
   }
+}
+
+export type PageSnapshot = {
+  url: string
+  text: string
+  controls: PageControl[]
 }
 
 export type Computer = {
@@ -11,21 +19,29 @@ export type Computer = {
   screenshot(): Promise<Buffer>
   pageText(): Promise<string>
   url(): Promise<string>
+  snapshot(): Promise<PageSnapshot>
   goto(url: string): Promise<void>
   click(x: number, y: number): Promise<void>
+  clickRef(ref: number): Promise<void>
   pointer(x: number, y: number): Promise<void>
   type(text: string): Promise<void>
+  typeRef(ref: number, text: string): Promise<void>
+  press(key: string): Promise<void>
+  scroll(direction: "up" | "down"): Promise<void>
   fill(selector: string, text: string): Promise<void>
   cookies(): Promise<Array<{ name: string; value: string }>>
+  liveView(): string
   setDriver(driver: "agent" | "user"): void
 }
 
 export class FakeComputer implements Computer {
   driver: "agent" | "user" = "agent"
   calls: string[] = []
+  typedChars: string[] = []
   text = ""
   currentUrl = "about:blank"
   awake = false
+  controls: PageControl[] = []
 
   constructor(readonly profileDir: string) {}
 
@@ -52,6 +68,10 @@ export class FakeComputer implements Computer {
     return this.currentUrl
   }
 
+  async snapshot(): Promise<PageSnapshot> {
+    return { url: this.currentUrl, text: this.text, controls: this.controls }
+  }
+
   async goto(url: string): Promise<void> {
     this.guard("goto")
     this.currentUrl = url
@@ -61,22 +81,52 @@ export class FakeComputer implements Computer {
     this.guard(`click:${x},${y}`)
   }
 
+  async clickRef(ref: number): Promise<void> {
+    this.guard(`clickRef:${ref}`)
+    if (!this.controls.some((control) => control.ref === ref)) {
+      throw new Error(`Control ${ref} is not on this page`)
+    }
+  }
+
   async pointer(x: number, y: number): Promise<void> {
     this.calls.push(`pointer:${x},${y}`)
   }
 
   async type(text: string): Promise<void> {
     this.guard("type")
+    for (const ch of text) this.typedChars.push(ch)
     this.text += text
+  }
+
+  async typeRef(ref: number, text: string): Promise<void> {
+    this.guard(`typeRef:${ref}`)
+    if (!this.controls.some((control) => control.ref === ref)) {
+      throw new Error(`Control ${ref} is not on this page`)
+    }
+    for (const ch of text) this.typedChars.push(ch)
+    this.text += text
+  }
+
+  async press(key: string): Promise<void> {
+    this.guard(`press:${key}`)
+  }
+
+  async scroll(direction: "up" | "down"): Promise<void> {
+    this.guard(`scroll:${direction}`)
   }
 
   async fill(selector: string, text: string): Promise<void> {
     this.guard(`fill:${selector}`)
+    for (const ch of text) this.typedChars.push(ch)
     this.text += text
   }
 
   async cookies(): Promise<Array<{ name: string; value: string }>> {
     return []
+  }
+
+  liveView(): string {
+    return "https://live.example/view"
   }
 
   setDriver(driver: "agent" | "user"): void {

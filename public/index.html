@@ -3,72 +3,547 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Opero</title>
+    <title>Opero House</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
     <style>
-      :root { color-scheme: light; --ink: #1c1915; --paper: #f6f1e7; --line: #d9cfc0; --accent: #8c3a2f; }
+      :root {
+        color-scheme: dark;
+        --bg: #121a2b;
+        --bg-deep: #0c1220;
+        --panel: rgba(30, 42, 66, 0.72);
+        --panel-solid: #1e2a42;
+        --navy: #293755;
+        --ink: #e8eef8;
+        --muted: #8b9bb8;
+        --line: rgba(255, 255, 255, 0.08);
+        --accent: #00c9b7;
+        --accent-dim: rgba(0, 201, 183, 0.16);
+        --accent-glow: rgba(0, 201, 183, 0.35);
+        --warn: #fab005;
+        --danger: #fa5252;
+        --ok: #25d366;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+        --radius: 18px;
+        --font: "Figtree", system-ui, sans-serif;
+        --display: "Syne", "Figtree", sans-serif;
+      }
       * { box-sizing: border-box; }
-      body { margin: 0; font: 16px/1.45 "Iowan Old Style", Palatino, serif; color: var(--ink); background: var(--paper); }
-      header, main { padding: 16px 20px; }
-      header { display: flex; justify-content: space-between; gap: 16px; align-items: center; border-bottom: 1px solid var(--line); }
-      h1 { font-size: 22px; margin: 0; letter-spacing: 0.04em; }
-      .controls { display: flex; gap: 12px; align-items: end; }
-      label { display: grid; gap: 4px; font-size: 13px; }
-      select, input, button, textarea { font: inherit; color: inherit; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
-      button { background: var(--ink); color: var(--paper); cursor: pointer; }
-      main { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; min-height: calc(100vh - 74px); }
-      #thread { display: flex; flex-direction: column; gap: 8px; min-height: 240px; }
-      .msg { padding: 8px 10px; background: white; border: 1px solid var(--line); }
-      .msg.agent { background: transparent; }
-      form { display: flex; gap: 8px; margin-top: 12px; }
-      textarea { flex: 1; min-height: 72px; resize: vertical; }
-      #plan { margin-top: 12px; }
-      .step { padding: 8px 0; border-top: 1px solid var(--line); }
-      #screen { width: 100%; min-height: 360px; background: #111; border-radius: 8px; }
-      .screen-actions { display: flex; gap: 8px; margin-top: 8px; }
-      @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font: 15px/1.5 var(--font);
+        color: var(--ink);
+        background:
+          radial-gradient(1200px 600px at 10% -10%, rgba(0, 201, 183, 0.14), transparent 55%),
+          radial-gradient(900px 500px at 100% 0%, rgba(41, 55, 85, 0.9), transparent 50%),
+          linear-gradient(165deg, var(--bg) 0%, var(--bg-deep) 100%);
+        min-height: 100vh;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.04;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        z-index: 0;
+      }
+      .shell {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        min-height: 100vh;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 18px 20px 24px;
+        gap: 16px;
+      }
+      header.app-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 18px;
+        border: 1px solid var(--line);
+        border-radius: calc(var(--radius) + 4px);
+        background: linear-gradient(135deg, rgba(30, 42, 66, 0.9), rgba(18, 26, 43, 0.75));
+        backdrop-filter: blur(16px);
+        box-shadow: var(--shadow);
+        animation: rise 0.55s ease both;
+      }
+      .brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+      .brand h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: 1.55rem;
+        letter-spacing: -0.03em;
+      }
+      .brand .subtitle {
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+      .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.22);
+        font-size: 0.8rem;
+        color: var(--muted);
+        align-self: center;
+      }
+      .status-pill .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--danger);
+        box-shadow: 0 0 0 3px rgba(250, 82, 82, 0.2);
+      }
+      .status-pill.live .dot {
+        background: var(--ok);
+        box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.2);
+      }
+      .status-pill.waiting .dot {
+        background: var(--warn);
+        box-shadow: 0 0 0 3px rgba(250, 176, 5, 0.2);
+      }
+      .status-pill.done .dot {
+        background: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-dim);
+      }
+      .overlay[aria-hidden="true"] { display: none; }
+      label.field {
+        display: grid;
+        gap: 4px;
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      select, input, button, textarea {
+        font: inherit;
+        color: var(--ink);
+        background: rgba(12, 18, 32, 0.85);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      }
+      select:focus, input:focus, textarea:focus {
+        border-color: rgba(0, 201, 183, 0.55);
+        box-shadow: 0 0 0 3px var(--accent-dim);
+      }
+      button {
+        cursor: pointer;
+        font-weight: 600;
+        border-color: transparent;
+      }
+      button.primary {
+        background: linear-gradient(135deg, #00d8c4, #00a896);
+        color: #04141a;
+        box-shadow: 0 8px 24px var(--accent-glow);
+      }
+      button.primary:hover { filter: brightness(1.06); }
+      button.ghost {
+        background: transparent;
+        border-color: var(--line);
+        color: var(--ink);
+      }
+      button.ghost:hover { border-color: rgba(0, 201, 183, 0.4); background: var(--accent-dim); }
+      button:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+      main.desk {
+        display: grid;
+        grid-template-columns: minmax(320px, 1.05fr) minmax(340px, 0.95fr);
+        gap: 16px;
+        min-height: 0;
+      }
+      .panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--panel);
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .panel.chat { animation: rise 0.65s ease both; animation-delay: 0.05s; }
+      .panel.stage { animation: rise 0.65s ease both; animation-delay: 0.12s; }
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.18);
+      }
+      .panel-head h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .mission-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--accent-dim);
+        color: var(--accent);
+        border: 1px solid rgba(0, 201, 183, 0.25);
+      }
+      #thread {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 16px;
+        min-height: 220px;
+      }
+      .msg {
+        max-width: 92%;
+        padding: 11px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(12, 18, 32, 0.65);
+        white-space: pre-wrap;
+        word-break: break-word;
+        animation: pop 0.28s ease both;
+      }
+      .msg.user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, rgba(0, 201, 183, 0.22), rgba(0, 201, 183, 0.08));
+        border-color: rgba(0, 201, 183, 0.3);
+      }
+      .msg.agent { align-self: flex-start; }
+      .composer-wrap {
+        padding: 12px 14px 14px;
+        border-top: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.16);
+      }
+      form#composer { display: flex; gap: 10px; align-items: end; }
+      textarea#mission {
+        flex: 1;
+        min-height: 72px;
+        max-height: 160px;
+        resize: vertical;
+      }
+      .plan-block {
+        padding: 0 16px 16px;
+        border-top: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.1);
+      }
+      .plan-block .plan-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0 8px;
+        font-family: var(--display);
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      #end {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      #steps { display: grid; gap: 8px; }
+      .step {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(41, 55, 85, 0.35);
+        font-size: 0.9rem;
+      }
+      .step .meta {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      .steps-empty { color: var(--muted); font-size: 0.88rem; padding: 4px 0 8px; }
+      .screen-frame {
+        position: relative;
+        margin: 16px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background:
+          linear-gradient(180deg, rgba(0, 201, 183, 0.05), transparent 40%),
+          #070b14;
+        aspect-ratio: 1280 / 800;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      }
+      #screen {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #070b14;
+        cursor: default;
+      }
+      #screen.driving { cursor: crosshair; }
+      .screen-idle {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+        pointer-events: none;
+        background:
+          radial-gradient(circle at 50% 40%, rgba(0, 201, 183, 0.12), transparent 55%),
+          repeating-linear-gradient(
+            -12deg,
+            transparent,
+            transparent 18px,
+            rgba(255, 255, 255, 0.015) 18px,
+            rgba(255, 255, 255, 0.015) 19px
+          );
+      }
+      .screen-idle strong {
+        display: block;
+        font-family: var(--display);
+        color: var(--ink);
+        font-size: 1.05rem;
+        margin-bottom: 6px;
+      }
+      .screen-idle.hidden { display: none; }
+      .screen-actions {
+        display: flex;
+        gap: 10px;
+        padding: 0 16px 16px;
+      }
+      .screen-actions button { flex: 1; }
+      .hint {
+        padding: 0 16px 16px;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(6, 10, 18, 0.72);
+        backdrop-filter: blur(10px);
+      }
+      .overlay.hidden { display: none; }
+      .key-card {
+        width: min(440px, 100%);
+        padding: 28px 26px;
+        border-radius: 22px;
+        border: 1px solid rgba(0, 201, 183, 0.28);
+        background:
+          linear-gradient(160deg, rgba(30, 42, 66, 0.98), rgba(18, 26, 43, 0.96));
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.03);
+        animation: rise 0.45s ease both;
+      }
+      .key-card h2 {
+        margin: 0 0 8px;
+        font-family: var(--display);
+        font-size: 1.45rem;
+        letter-spacing: -0.02em;
+      }
+      .key-card p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      .key-card .row { display: flex; gap: 10px; }
+      .key-card input { flex: 1; }
+      .key-card .stack { display: grid; gap: 10px; margin-top: 12px; }
+      .vault-list { display: grid; gap: 8px; margin-top: 14px; max-height: 220px; overflow: auto; }
+      .vault-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.22);
+      }
+      .vault-item span { color: var(--ink); font-weight: 500; }
+      .vault-empty { color: var(--muted); font-size: 0.9rem; margin: 12px 0 0; }
+      .key-msg {
+        margin-top: 12px;
+        min-height: 1.2em;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+      .key-msg.err { color: #ff8d8d; }
+      .key-msg.ok { color: var(--accent); }
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: none; }
+      }
+      @keyframes pop {
+        from { opacity: 0; transform: translateY(6px) scale(0.98); }
+        to { opacity: 1; transform: none; }
+      }
+      @media (max-width: 960px) {
+        main.desk { grid-template-columns: 1fr; }
+        .shell { padding: 12px; }
+      }
+      html[dir="rtl"] .msg.user { align-self: flex-start; }
+      html[dir="rtl"] .msg.agent { align-self: flex-end; }
     </style>
   </head>
   <body>
-    <header>
-      <h1 id="title">Opero</h1>
-      <div class="controls">
-        <label id="level-label">Level
-          <select id="level"><option value="1">1</option><option value="2" selected>2</option></select>
-        </label>
-        <label id="language-label">Language
-          <select id="language"><option value="en">English</option><option value="he">עברית</option></select>
-        </label>
-      </div>
-    </header>
-    <main>
-      <section>
-        <div id="thread"></div>
-        <form id="composer">
-          <textarea id="mission" placeholder="Give a mission"></textarea>
-          <button id="send" type="submit">Send</button>
-        </form>
-        <section id="plan">
-          <label id="end-label">End <input id="end" /></label>
-          <div id="steps"></div>
-        </section>
-      </section>
-      <section>
-        <img id="screen" alt="Computer" />
-        <div class="screen-actions">
-          <button id="take" type="button">Take control</button>
-          <button id="hand" type="button">I'm done</button>
+    <div class="shell">
+      <header class="app-bar">
+        <div class="brand">
+          <h1 id="title">Opero</h1>
+          <span class="subtitle" id="subtitle">House</span>
         </div>
-      </section>
-    </main>
+        <div class="controls">
+          <div class="status-pill" id="conn-pill"><span class="dot"></span><span id="conn-text">Offline</span></div>
+          <div class="status-pill" id="mission-pill"><span class="dot"></span><span id="mission-text">—</span></div>
+          <label class="field" id="level-label">Level
+            <select id="level"><option value="1">1</option><option value="2" selected>2</option></select>
+          </label>
+          <label class="field" id="language-label">Language
+            <select id="language"><option value="en">English</option><option value="he">עברית</option></select>
+          </label>
+          <button class="ghost" id="vault-open" type="button">Vault</button>
+        </div>
+      </header>
+
+      <main class="desk">
+        <section class="panel chat">
+          <div class="panel-head">
+            <h2 id="chat-heading">Mission</h2>
+            <span class="mission-badge" id="ready-badge">…</span>
+          </div>
+          <div id="thread"></div>
+          <div class="composer-wrap">
+            <form id="composer">
+              <textarea id="mission" placeholder="Give a mission…" rows="3"></textarea>
+              <button class="primary" id="send" type="submit">Send</button>
+            </form>
+          </div>
+          <div class="plan-block">
+            <div class="plan-title"><span id="plan-label">Plan</span></div>
+            <label class="field" id="end-label">End
+              <input id="end" />
+            </label>
+            <div id="steps"><p class="steps-empty" id="steps-empty">Steps appear after you send a mission</p></div>
+          </div>
+        </section>
+
+        <section class="panel stage">
+          <div class="panel-head">
+            <h2 id="screen-heading">Computer</h2>
+          </div>
+          <div class="screen-frame">
+            <img id="screen" alt="" hidden />
+            <div class="screen-idle" id="screen-idle">
+              <div>
+                <strong id="idle-title">Computer</strong>
+                <span id="idle-text">The house computer wakes when a mission starts</span>
+              </div>
+            </div>
+          </div>
+          <div class="screen-actions">
+            <button class="ghost" id="take" type="button">Take control</button>
+            <button class="ghost" id="hand" type="button">I'm done</button>
+          </div>
+          <p class="hint" id="driver-hint"></p>
+        </section>
+      </main>
+    </div>
+
+    <div class="overlay" id="key-overlay" aria-hidden="false">
+      <div class="key-card">
+        <h2 id="key-title">Connect Grok</h2>
+        <p id="key-body">Paste your xAI API key. It stays on this machine in data/xai.key and is never shown again.</p>
+        <div class="row">
+          <input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="xai-…" />
+          <button class="primary" id="key-save" type="button">Save key</button>
+        </div>
+        <div class="key-msg" id="key-msg"></div>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="vault-overlay" aria-hidden="true">
+      <div class="key-card" role="dialog" aria-labelledby="vault-title">
+        <h2 id="vault-title">Vault</h2>
+        <p id="vault-body">Save a detail by the case it fits. Opero types it into the page and never puts the value in chat.</p>
+        <div class="stack">
+          <input id="vault-description" autocomplete="off" spellcheck="false" placeholder="What it is for" />
+          <input id="vault-value" type="password" autocomplete="off" spellcheck="false" placeholder="Secret" />
+          <div class="row">
+            <button class="primary" id="vault-save" type="button">Save</button>
+            <button class="ghost" id="vault-close" type="button">Close</button>
+          </div>
+        </div>
+        <div class="key-msg" id="vault-msg"></div>
+        <div class="vault-list" id="vault-list"></div>
+      </div>
+    </div>
+
     <script>
       const thread = document.querySelector("#thread")
       const steps = document.querySelector("#steps")
       const end = document.querySelector("#end")
       const screen = document.querySelector("#screen")
+      const screenIdle = document.querySelector("#screen-idle")
       const mission = document.querySelector("#mission")
-      const socket = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host)
+      const keyOverlay = document.querySelector("#key-overlay")
+      const keyInput = document.querySelector("#key-input")
+      const keyMsg = document.querySelector("#key-msg")
+      const vaultOverlay = document.querySelector("#vault-overlay")
+      const vaultList = document.querySelector("#vault-list")
+      const vaultDescription = document.querySelector("#vault-description")
+      const vaultValue = document.querySelector("#vault-value")
+      const vaultMsg = document.querySelector("#vault-msg")
+      const connPill = document.querySelector("#conn-pill")
+      const connText = document.querySelector("#conn-text")
+      const missionPill = document.querySelector("#mission-pill")
+      const missionText = document.querySelector("#mission-text")
+      const readyBadge = document.querySelector("#ready-badge")
+      const driverHint = document.querySelector("#driver-hint")
+
       let waiting = false
-      const send = (event) => socket.send(JSON.stringify(event))
+      let ready = false
+      let driver = "agent"
+      let labels = {}
+      let hasScreen = false
+      let vaultItems = []
+
+      const socket = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host)
+      const send = (event) => {
+        if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(event))
+      }
+
+      socket.addEventListener("open", () => {
+        connPill.classList.add("live")
+        connText.textContent = labels.connected || "Live"
+      })
+      socket.addEventListener("close", () => {
+        connPill.classList.remove("live")
+        connText.textContent = labels.disconnected || "Offline"
+      })
+
       socket.addEventListener("message", (event) => {
         const message = JSON.parse(event.data)
         if (message.type === "labels") applyLabels(message.labels, message.language)
@@ -76,59 +551,235 @@
           document.querySelector("#level").value = String(message.level)
           document.querySelector("#language").value = message.language
         }
+        if (message.type === "ready") {
+          ready = message.ready
+          readyBadge.textContent = ready ? (labels.keySaved || "Ready") : (labels.keyTitle || "Connect Grok")
+          keyOverlay.classList.toggle("hidden", ready)
+          keyOverlay.setAttribute("aria-hidden", ready ? "true" : "false")
+          if (ready) keyInput.value = ""
+        }
+        if (message.type === "key_result") {
+          keyMsg.className = "key-msg " + (message.ok === true ? "ok" : message.ok === false ? "err" : "")
+          keyMsg.textContent = message.message || ""
+          document.querySelector("#key-save").disabled = message.ok === null
+        }
         if (message.type === "message") add(message.role, message.text)
-        if (message.type === "question") { waiting = true; add("agent", message.question) }
-        if (message.type === "status" && message.status !== "waiting_on_user") waiting = false
+        if (message.type === "question") {
+          waiting = true
+          add("agent", message.question)
+          setMissionStatus("waiting_on_user")
+        }
+        if (message.type === "status") {
+          if (message.status !== "waiting_on_user") waiting = false
+          setMissionStatus(message.status)
+        }
         if (message.type === "plan") showPlan(message.mission)
-        if (message.type === "screen") screen.src = "data:image/jpeg;base64," + message.image
+        if (message.type === "screen") {
+          hasScreen = true
+          screen.hidden = false
+          screen.alt = labels.screen || "Computer"
+          screen.src = "data:image/jpeg;base64," + message.image
+          screenIdle.classList.add("hidden")
+        }
+        if (message.type === "driver") {
+          driver = message.driver
+          updateDriverUi()
+        }
+        if (message.type === "vault") {
+          vaultItems = Array.isArray(message.items) ? message.items : []
+          renderVault()
+        }
+        if (message.type === "vault_result") {
+          vaultMsg.className = "key-msg " + (message.ok ? "ok" : "err")
+          vaultMsg.textContent = message.message || ""
+          if (message.ok) {
+            vaultDescription.value = ""
+            vaultValue.value = ""
+          }
+        }
       })
+
       document.querySelector("#composer").addEventListener("submit", (event) => {
         event.preventDefault()
         const text = mission.value.trim()
         if (!text) return
+        if (!ready) {
+          keyOverlay.classList.remove("hidden")
+          return
+        }
         send({ type: waiting ? "answer" : "mission", text })
         mission.value = ""
       })
       end.addEventListener("change", () => send({ type: "edit_end", end: end.value }))
       document.querySelector("#level").addEventListener("change", (event) => send({ type: "level", level: Number(event.target.value) }))
       document.querySelector("#language").addEventListener("change", (event) => send({ type: "language", language: event.target.value }))
-      document.querySelector("#take").addEventListener("click", () => send({ type: "driver", text: "user" }))
-      document.querySelector("#hand").addEventListener("click", () => send({ type: "driver", text: "agent" }))
+      document.querySelector("#take").addEventListener("click", () => {
+        driver = "user"
+        updateDriverUi()
+        send({ type: "driver", text: "user" })
+      })
+      document.querySelector("#hand").addEventListener("click", () => {
+        driver = "agent"
+        updateDriverUi()
+        send({ type: "driver", text: "agent" })
+      })
+      document.querySelector("#key-save").addEventListener("click", () => {
+        const key = keyInput.value.trim()
+        send({ type: "save_key", key })
+      })
+      keyInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") document.querySelector("#key-save").click()
+      })
+      document.querySelector("#vault-open").addEventListener("click", () => {
+        vaultOverlay.classList.remove("hidden")
+        vaultOverlay.setAttribute("aria-hidden", "false")
+        vaultMsg.textContent = ""
+        send({ type: "vault_list" })
+      })
+      document.querySelector("#vault-close").addEventListener("click", () => {
+        vaultOverlay.classList.add("hidden")
+        vaultOverlay.setAttribute("aria-hidden", "true")
+      })
+      document.querySelector("#vault-save").addEventListener("click", () => {
+        send({
+          type: "vault_save",
+          description: vaultDescription.value.trim(),
+          value: vaultValue.value,
+        })
+      })
+      vaultOverlay.addEventListener("click", (event) => {
+        if (event.target === vaultOverlay) document.querySelector("#vault-close").click()
+      })
       screen.addEventListener("click", (event) => {
+        if (driver !== "user") return
         const box = screen.getBoundingClientRect()
+        if (!box.width || !box.height) return
         const x = Math.round((event.clientX - box.left) * (1280 / box.width))
         const y = Math.round((event.clientY - box.top) * (800 / box.height))
         send({ type: "click", x, y })
       })
+
       function add(role, text) {
         const row = document.createElement("div")
         row.className = "msg " + role
         row.textContent = text
         thread.append(row)
+        thread.scrollTop = thread.scrollHeight
       }
+
       function showPlan(plan) {
         end.value = plan.end
         steps.replaceChildren()
+        if (!plan.steps || plan.steps.length === 0) {
+          const empty = document.createElement("p")
+          empty.className = "steps-empty"
+          empty.id = "steps-empty"
+          empty.textContent = labels.stepsEmpty || "Steps appear after you send a mission"
+          steps.append(empty)
+          return
+        }
         for (const item of plan.steps) {
           const row = document.createElement("div")
           row.className = "step"
-          row.textContent = item.site + " — " + item.text + " — " + item.doneWhen
+          row.innerHTML = ""
+          const title = document.createElement("span")
+          title.textContent = item.text
+          const meta = document.createElement("span")
+          meta.className = "meta"
+          meta.textContent = item.site + " · " + item.doneWhen
+          row.append(title, meta)
           steps.append(row)
         }
+        if (plan.status) setMissionStatus(plan.status)
       }
+
+      function setMissionStatus(status) {
+        missionPill.classList.remove("live", "waiting", "done")
+        const map = {
+          planning: labels.waiting || "Waiting",
+          running: labels.running || "Running",
+          waiting_on_user: labels.waiting || "Waiting",
+          done: labels.done || "Done",
+          blocked: labels.blocked || "Blocked",
+        }
+        missionText.textContent = map[status] || status || "—"
+        if (status === "running") missionPill.classList.add("live")
+        if (status === "waiting_on_user" || status === "planning") missionPill.classList.add("waiting")
+        if (status === "done") missionPill.classList.add("done")
+      }
+
+      function updateDriverUi() {
+        screen.classList.toggle("driving", driver === "user")
+        driverHint.textContent = driver === "user"
+          ? (labels.controlHint || "You are driving — click the screen")
+          : (labels.agentHint || "Opero is driving")
+      }
+
+      function renderVault() {
+        vaultList.replaceChildren()
+        if (vaultItems.length === 0) {
+          const empty = document.createElement("p")
+          empty.className = "vault-empty"
+          empty.textContent = labels.vaultEmpty || "No saved details yet"
+          vaultList.append(empty)
+          return
+        }
+        for (const description of vaultItems) {
+          const row = document.createElement("div")
+          row.className = "vault-item"
+          const name = document.createElement("span")
+          name.textContent = description
+          const remove = document.createElement("button")
+          remove.type = "button"
+          remove.className = "ghost"
+          remove.textContent = labels.vaultRemove || "Remove"
+          remove.addEventListener("click", () => send({ type: "vault_remove", description }))
+          row.append(name, remove)
+          vaultList.append(row)
+        }
+      }
+
       function applyLabels(text, language) {
+        labels = text
         document.documentElement.lang = language
         document.documentElement.dir = language === "he" ? "rtl" : "ltr"
         document.querySelector("#title").textContent = text.title
+        document.querySelector("#subtitle").textContent = text.subtitle
         mission.placeholder = text.placeholder
         document.querySelector("#send").textContent = text.send
         document.querySelector("#take").textContent = text.take
         document.querySelector("#hand").textContent = text.handBack
-        document.querySelector("#end-label").firstChild.textContent = text.end + " "
-        document.querySelector("#level-label").firstChild.textContent = text.level + " "
-        document.querySelector("#language-label").firstChild.textContent = text.language + " "
+        document.querySelector("#end-label").childNodes[0].textContent = text.end + " "
+        document.querySelector("#level-label").childNodes[0].textContent = text.level + " "
+        document.querySelector("#language-label").childNodes[0].textContent = text.language + " "
+        document.querySelector("#plan-label").textContent = text.plan
+        document.querySelector("#screen-heading").textContent = text.screen
+        document.querySelector("#idle-title").textContent = text.screen
+        document.querySelector("#idle-text").textContent = text.idleScreen
+        document.querySelector("#key-title").textContent = text.keyTitle
+        document.querySelector("#key-body").textContent = text.keyBody
+        document.querySelector("#key-save").textContent = text.keySave
+        keyInput.placeholder = text.keyPlaceholder
+        document.querySelector("#vault-open").textContent = text.vault
+        document.querySelector("#vault-title").textContent = text.vaultTitle
+        document.querySelector("#vault-body").textContent = text.vaultBody
+        document.querySelector("#vault-save").textContent = text.vaultSave
+        document.querySelector("#vault-close").textContent = text.vaultClose
+        vaultDescription.placeholder = text.vaultDescription
+        vaultValue.placeholder = text.vaultValue
         screen.alt = text.screen
+        const empty = document.querySelector("#steps-empty")
+        if (empty) empty.textContent = text.stepsEmpty
+        if (socket.readyState === WebSocket.OPEN) connText.textContent = text.connected
+        else connText.textContent = text.disconnected
+        readyBadge.textContent = ready ? text.keySaved : text.keyTitle
+        updateDriverUi()
+        renderVault()
       }
+
+      updateDriverUi()
+      setMissionStatus("")
+      renderVault()
     </script>
   </body>
 </html>

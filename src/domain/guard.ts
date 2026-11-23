@@ -8,7 +8,11 @@ export function forceAsk(pageText: string, action: AgentAction, secrets: string[
     return "secret"
   }
   if (action.type === "fill_detail" && WRONG_DETAIL.test(pageText)) return "wrong_detail"
-  if ((action.type === "click" || action.type === "type") && action.commit && HUMAN_PROOF.test(pageText)) {
+  if (
+    (action.type === "click" || action.type === "type" || action.type === "pointer_click") &&
+    action.commit &&
+    HUMAN_PROOF.test(pageText)
+  ) {
     return "code"
   }
   return null
