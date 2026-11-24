@@ -16,7 +16,9 @@ Do not run `/maintain-verification-skill`, formal verification, or `/poteto-mode
 
 ## When you run
 
-Run when a builder hands over a finished branch, PR, or spec file. If no spec is named, ask for it and stop.
+Run when a builder hands over a finished branch, PR, or spec file. If the handoff names a pull request, the pull request body is the spec: use its claims. If that body has no claims, stop. If no spec and no pull request are named, ask for the spec and stop.
+
+Skip the drive when the pull request body says the change is contract-only, styling, or an internal refactor, and the diff keeps the same socket messages, sentences, accessible names, and element ids. Wording a person reads is a drive. A contract-only pull request has nothing new to click.
 
 Verify only. Do not edit product code to make a check pass, do not commit, and do not open a fix PR. You do not fix the product. On a failure you open the follow-up agent, and that agent owns the fix.
 

@@ -57,7 +57,7 @@ The planning model does not choose ordinary clicks. It supervises when progress 
 
 ## Process and chat
 
-Two processes. House entry point: `src/chat/server.ts` — binds `127.0.0.1:8787` for health JSON (`{ "service": "opero-home", "ok": true }`) and the WebSocket. Page: `frontend/` served on `127.0.0.1:8788` (`npm run dev:page`). The page does not import `src/`. Boundary and message types: [frontend/CONTRACT.md](../frontend/CONTRACT.md).
+Two processes. House entry point: `src/chat/server.ts` — binds `127.0.0.1:8787` for health JSON (`{ "service": "opero-home", "ok": true }`) and the WebSocket. Page: `frontend/` served on `127.0.0.1:8788` (`npm run dev:page`). The page does not import `src/`. Message types and field shapes: [frontend/socket-contract.json](../frontend/socket-contract.json). The prose boundary is [frontend/CONTRACT.md](../frontend/CONTRACT.md). A bad socket frame is ignored, and an unknown `type` is ignored.
 
 There is one in-memory `HouseLoop`, one `Computer`, one `Vault`, and one house record (`house_builder`). Every connected browser tab receives the same events. The planner owns the chat. A written plan only guides the one action agent. It is not a lock on the chat and does not decide whether an agent may start. Chrome strings (titles, placeholders, button captions) live in `frontend/labels.js`; the house no longer sends `labels`.
 
@@ -413,7 +413,8 @@ The vision is still the product target. These are the gaps a consultant should n
 | `src/vault/vault.ts` | Encrypted details |
 | `src/store/house-store.ts` | `data/house.json` |
 | `frontend/` | Page package on 8788: `index.html`, `labels.js`, `pointer.js`, `server.mjs` |
-| `frontend/CONTRACT.md` | Page ↔ house socket and DOM contract |
+| `frontend/socket-contract.json` | Source for socket types, fields, and shapes |
+| `frontend/CONTRACT.md` | Page ↔ house prose, generated type tables, and DOM contract |
 | `.cursor/plans/opero_agent_vision.md` | Product target, not a description of this code |
 
 ## Constraints that are deliberate

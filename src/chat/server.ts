@@ -1,4 +1,5 @@
 import { createServer } from "node:http"
+import { readSocketFrame } from "./frame.js"
 import { join } from "node:path"
 import { WebSocketServer, type WebSocket } from "ws"
 import { HouseLoop, type LoopEvent } from "../agent/loop.js"
@@ -269,7 +270,9 @@ wss.on("connection", (socket) => {
 })
 
 async function onMessage(socket: WebSocket, raw: string): Promise<void> {
-  const event = JSON.parse(raw) as {
+  const parsed = readSocketFrame(raw)
+  if (!parsed) return
+  const event = parsed as {
     type: string
     text?: string
     end?: string

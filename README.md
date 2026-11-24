@@ -15,7 +15,7 @@ In a second terminal:
 npm run dev:page
 ```
 
-Open [http://127.0.0.1:8788](http://127.0.0.1:8788). The house socket and health JSON stay on [http://127.0.0.1:8787](http://127.0.0.1:8787). The page ↔ house boundary is documented in [frontend/CONTRACT.md](frontend/CONTRACT.md).
+Open [http://127.0.0.1:8788](http://127.0.0.1:8788). The house socket and health JSON stay on [http://127.0.0.1:8787](http://127.0.0.1:8787). Message types and field shapes live in [frontend/socket-contract.json](frontend/socket-contract.json). [frontend/CONTRACT.md](frontend/CONTRACT.md) explains the boundary. `npm run lanes` fails a diff that mixes the page and the house, or that edits the contract inside a feature change.
 
 If no Grok key is set, the setup card asks for your xAI API key and saves it to `data/xai.key` on this machine.
 

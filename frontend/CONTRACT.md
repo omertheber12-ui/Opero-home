@@ -44,49 +44,57 @@ The house **does not** send `{ "type": "labels", ... }` on connect or on languag
 
 ## Page → house
 
-The page **only** sends the types below. The house still accepts `steer` and `answer` as aliases of `mission` for older clients; the page must not send those aliases.
+The page only sends the generated types below. `frontend/socket-contract.json` is the source for types, fields, and shapes.
 
-| `type` | Fields | Notes |
-| --- | --- | --- |
-| `mission` | `text` (string) | Chat line: clarify, start, steer, answer, or abort-and-start. |
-| `edit_end` | `end` (string) | Replace the mission end. Steps are not edited from the page. |
-| `level` | `level` (`1` \| `2`) | Stored on the house; applied on the next mission start. |
-| `language` | `language` (`"en"` \| `"he"`) | Stored on the house for the planner; page updates its own chrome. |
-| `driver` | `text` (`"user"` \| `"agent"`) | Take control / hand back. |
-| `save_key` | `key` (string) | Grok API key paste. |
-| `vault_list` | _(none)_ | Ask the house to reply with `vault`. |
-| `vault_save` | `description` (string), `value` (string) | Save a vault entry. |
-| `vault_remove` | `description` (string) | Remove a vault entry by description. |
-| `click` | `x` (number), `y` (number) | Image pixels after letterbox mapping (see below). Only meaningful while driver is `user`. |
-| `scroll` | `direction` (`"up"` \| `"down"`) | User scroll while driving. |
-| `press` | `key` (string) | e.g. `Enter`, `Tab`, `Backspace`. |
-| `type` | `text` (string) | Typed character(s) while driving. |
-| `work_status` | _(none)_ | Ask for the current status board; house replies with `work_status`. |
+<!-- socket-types:start -->
+Generated from `frontend/socket-contract.json`. Edit the JSON, then run `node scripts/generate-contract-tables.mjs`.
+
+### Page → house types
+
+| `type` | Fields |
+| --- | --- |
+| `mission` | `text` (string) |
+| `edit_end` | `end` (string) |
+| `level` | `level` (1 | 2) |
+| `language` | `language` ("en" | "he") |
+| `driver` | `text` ("user" | "agent") |
+| `save_key` | `key` (string) |
+| `vault_list` | _(none)_ |
+| `vault_save` | `description` (string), `value` (string) |
+| `vault_remove` | `description` (string) |
+| `click` | `x` (number), `y` (number) |
+| `scroll` | `direction` ("up" | "down") |
+| `press` | `key` (string) |
+| `type` | `text` (string) |
+| `work_status` | _(none)_ |
+
+The house still accepts `steer` and `answer` as aliases of `mission` for older clients. The page must not send those aliases.
+
+### House → page types
+
+| `type` | Fields |
+| --- | --- |
+| `settings` | `level` (1 | 2), `language` ("en" | "he"), `workStatusPollMs` (number) |
+| `ready` | `ready` (boolean), `mode` (string) |
+| `key_result` | `ok` (boolean | null), `message` (string) |
+| `thread` | `messages` (array) |
+| `message` | `role` ("user" | "agent"), `text` (string) |
+| `thinking` | `text` (string) |
+| `question` | `question` (string), `reason` (string) |
+| `status` | `status` ("planning" | "running" | "waiting_on_user" | "done" | "blocked" | "aborted") |
+| `plan` | `mission` (object) |
+| `screen` | `image` (string), `width` (number), `height` (number) |
+| `driver` | `driver` ("user" | "agent") |
+| `vault` | `items` (array) |
+| `vault_result` | `ok` (boolean), `message` (string) |
+| `work_status` | `status` (object | null) |
+<!-- socket-types:end -->
+
+On connect the house sends, in order of current practice: `settings`, `ready`, `vault`, `thread`, and `plan` when a mission exists (live or last). It does **not** send `labels`.
 
 ### Click coordinates
 
 `click.x` and `click.y` are **image pixels**, not CSS box pixels. Map the pointer through the letterboxed picture (same math as `mapPictureClick`: scale to fit, ignore padding outside the drawn image). Clicks on letterbox padding are not sent.
-
-## House → page
-
-| `type` | Fields | Notes |
-| --- | --- | --- |
-| `settings` | `level` (`1` \| `2`), `language` (`"en"` \| `"he"`), `workStatusPollMs` (number) | Sent on connect. Page syncs controls and poll interval. |
-| `ready` | `ready` (boolean), `mode` (string) | Whether a live key (or fake mode) is available. |
-| `key_result` | `ok` (`true` \| `false` \| `null`), `message` (string) | Key save progress; `null` means in progress. |
-| `thread` | `messages` (`{ role: "user" \| "agent", text: string }[]`) | Full replayed conversation on connect. |
-| `message` | `role` (`"user"` \| `"agent"`), `text` (string) | One new chat line. |
-| `thinking` | `text` (string) | Transient thinking line; clear on the next `message` or `question`. |
-| `question` | `question` (string), `reason` (string) | Agent question. The page may ignore `reason` and show `question` as an agent line. |
-| `status` | `status` (mission status string) | e.g. `planning`, `running`, `waiting_on_user`, `done`, `blocked`, `aborted`. |
-| `plan` | `mission` (object) | Mission payload. The page requires at least `end`, `steps` (each with `text`, `site`, `doneWhen`), and `status`. Extra mission fields may be present; ignore what the UI does not use. |
-| `screen` | `image` (base64 JPEG string), `width` (number), `height` (number) | Live computer frame. |
-| `driver` | `driver` (`"user"` \| `"agent"`) | Who is driving the computer. |
-| `vault` | `items` (`string[]`) | Descriptions only (no secret values). |
-| `vault_result` | `ok` (boolean), `message` (string) | Result of save/remove. |
-| `work_status` | `status` (status board object or `null`) | Board fields when present: `missionId`, `phase`, `stepHint`, `lastAction`, `challenge`, `updatedAt`, `detail`, and optional `stagnantActions`, `failedOpen`, `siteError`, `budgetUsed`. |
-
-On connect the house sends, in order of current practice: `settings`, `ready`, `vault`, `thread`, and `plan` when a mission exists (live or last). It does **not** send `labels`.
 
 ## Verification DOM contract
 
@@ -113,7 +121,7 @@ Connection and ready copy used by doctor: `Live` / `מחובר`, `Offline` / `מ
 
 ## Non-negotiables
 
-1. Do not add page→house or house→page `type` values outside this document.
+1. Do not add a message type, field, or field shape outside `frontend/socket-contract.json`. The tables in this file are generated from that JSON.
 2. Do not send `labels` from the house; do not require `labels` in the page.
 3. Do not move the page back onto 8787 HTTP; health JSON stays on 8787, UI on 8788.
 4. Changing a listed DOM id or verification button name requires updating the verify skill in the same change.

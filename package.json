@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test": "vitest run && npm test --prefix frontend",
+    "lanes": "node scripts/check-lanes.mjs",
     "dev": "tsx src/chat/server.ts",
     "dev:fake": "MODEL=fake tsx src/chat/server.ts",
     "dev:page": "node frontend/server.mjs"

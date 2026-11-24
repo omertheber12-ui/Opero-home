@@ -1,0 +1,53 @@
+---
+description: Page and house stay in separate pull requests. The socket contract is the boundary. Authors do not merge.
+alwaysApply: true
+---
+
+# Split ownership
+
+Cursor Cloud Agents own the page. Local Cursor owns the house. They share this repo and the socket contract. A pull request is one of three kinds: page, house, or contract.
+
+```mermaid
+flowchart LR
+  cloud[Cloud agent] -->|opens page PR and stops| pr[Pull request]
+  house[House author] -->|opens house PR and stops| pr
+  pr --> ci[CI lanes and tests]
+  pr --> fresh[Fresh local session]
+  fresh --> judge[Reviewer]
+  judge -->|person would notice| verify[Verification]
+  ci --> merge[GitHub auto-merge]
+  judge --> merge
+```
+
+## Zones
+
+- House: `src/`, root `test/`, root `package.json`, `package-lock.json`, `docs/architecture.md`, `.github/`, `.cursor/` except the verify skill, `scripts/`.
+- Page: `frontend/` except the three contract files below.
+- Contract: `frontend/socket-contract.json`, `frontend/CONTRACT.md`, `frontend/contract.mjs`, and `.cursor/skills/verify-opero/` when a DOM id or verification button name changes.
+- Specs under `docs/superpowers/` may ride along with the feature that owns them.
+
+A page task does not edit the house. A house task does not edit the page. A feature task does not edit the contract files. `npm run lanes` checks the diff.
+
+## Contract
+
+`frontend/socket-contract.json` is the only list of message types, fields, and shapes. Edit it, then run `node scripts/generate-contract-tables.mjs`. The type tables in `frontend/CONTRACT.md` are generated.
+
+Add a message or an optional field in a contract pull request first. The house pull request and the page pull request follow, in either order, and both keep speaking the previous contract. A shape change, rename, or removal is a later contract pull request, after both sides have stopped depending on the old message.
+
+An unknown incoming type is ignored. A frame that is not JSON is ignored. The house and the page keep the socket open. Order and meaning of fields are not caught by the contract tests. Name them in the pull request claims when they matter.
+
+The page must not send `steer` or `answer`. Vault values stay off the house-to-page messages. The model sees descriptions, not secret values.
+
+## What you do
+
+Run `npm run lanes` before opening the pull request. The cloud agent also runs `npm test --prefix frontend`. The house author runs `npm test`.
+
+The pull request body carries the claims and a class: `behavior`, `contract`, `style`, or `refactor`. Wording a person reads is `behavior`.
+
+Then stop. Do not review your own diff. Do not post `review-pass` or `verify-pass`. Do not merge. A fresh local session does that from the pull request number, the diff, and the body.
+
+## What done means
+
+GitHub auto-merges when Actions `lanes` and `test` are green and the fresh session has posted `review-pass`. The session posts `review-pass` only after the reviewer passes and, when a person would notice, the verification drive passes. Contract, styling, and internal-refactor pull requests skip the drive. `verify-pass` is the drive record. GitHub cannot require it for behavior pull requests only, so it is not a required check. Withholding `review-pass` until the drive is finished is what makes auto-merge wait.
+
+This rules change itself mixes zones. `lanes` fails on the pull request that introduces it. Merge that one by hand. Later pull requests are checked.

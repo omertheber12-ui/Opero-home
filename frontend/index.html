@@ -526,6 +526,7 @@
       import { labels as labelMap } from "./labels.js"
       import { mapPictureClick as mapClick } from "./pointer.js"
       import { HOUSE_WS_URL } from "./config.mjs"
+      import { readFrame } from "./read-frame.mjs"
 
       const thread = document.querySelector("#thread")
       const steps = document.querySelector("#steps")
@@ -582,7 +583,8 @@
       })
 
       socket.addEventListener("message", (event) => {
-        const message = JSON.parse(event.data)
+        const message = readFrame(event.data)
+        if (!message) return
         if (message.type === "settings") {
           document.querySelector("#level").value = String(message.level)
           document.querySelector("#language").value = message.language

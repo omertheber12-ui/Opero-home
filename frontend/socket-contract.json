@@ -1,0 +1,114 @@
+{
+  "houseInboundAliases": ["steer", "answer"],
+  "pageToHouse": [
+    { "type": "mission", "fields": [{ "name": "text", "shape": "string", "required": true }] },
+    { "type": "edit_end", "fields": [{ "name": "end", "shape": "string", "required": true }] },
+    { "type": "level", "fields": [{ "name": "level", "shape": "1 | 2", "required": true }] },
+    { "type": "language", "fields": [{ "name": "language", "shape": "\"en\" | \"he\"", "required": true }] },
+    { "type": "driver", "fields": [{ "name": "text", "shape": "\"user\" | \"agent\"", "required": true }] },
+    { "type": "save_key", "fields": [{ "name": "key", "shape": "string", "required": true }] },
+    { "type": "vault_list", "fields": [] },
+    {
+      "type": "vault_save",
+      "fields": [
+        { "name": "description", "shape": "string", "required": true },
+        { "name": "value", "shape": "string", "required": true }
+      ]
+    },
+    { "type": "vault_remove", "fields": [{ "name": "description", "shape": "string", "required": true }] },
+    {
+      "type": "click",
+      "fields": [
+        { "name": "x", "shape": "number", "required": true },
+        { "name": "y", "shape": "number", "required": true }
+      ]
+    },
+    { "type": "scroll", "fields": [{ "name": "direction", "shape": "\"up\" | \"down\"", "required": true }] },
+    { "type": "press", "fields": [{ "name": "key", "shape": "string", "required": true }] },
+    { "type": "type", "fields": [{ "name": "text", "shape": "string", "required": true }] },
+    { "type": "work_status", "fields": [] }
+  ],
+  "houseToPage": [
+    {
+      "type": "settings",
+      "fields": [
+        { "name": "level", "shape": "1 | 2", "required": true },
+        { "name": "language", "shape": "\"en\" | \"he\"", "required": true },
+        { "name": "workStatusPollMs", "shape": "number", "required": true }
+      ]
+    },
+    {
+      "type": "ready",
+      "fields": [
+        { "name": "ready", "shape": "boolean", "required": true },
+        { "name": "mode", "shape": "string", "required": true }
+      ]
+    },
+    {
+      "type": "key_result",
+      "fields": [
+        { "name": "ok", "shape": "boolean | null", "required": true },
+        { "name": "message", "shape": "string", "required": true }
+      ]
+    },
+    { "type": "thread", "fields": [{ "name": "messages", "shape": "array", "required": true }] },
+    {
+      "type": "message",
+      "fields": [
+        { "name": "role", "shape": "\"user\" | \"agent\"", "required": true },
+        { "name": "text", "shape": "string", "required": true }
+      ]
+    },
+    { "type": "thinking", "fields": [{ "name": "text", "shape": "string", "required": true }] },
+    {
+      "type": "question",
+      "fields": [
+        { "name": "question", "shape": "string", "required": true },
+        { "name": "reason", "shape": "string", "required": true }
+      ]
+    },
+    {
+      "type": "status",
+      "fields": [
+        {
+          "name": "status",
+          "shape": "\"planning\" | \"running\" | \"waiting_on_user\" | \"done\" | \"blocked\" | \"aborted\"",
+          "required": true
+        }
+      ]
+    },
+    {
+      "type": "plan",
+      "fields": [
+        {
+          "name": "mission",
+          "shape": "object",
+          "required": true,
+          "fields": [
+            { "name": "end", "shape": "string", "required": true },
+            { "name": "steps", "shape": "array", "required": true },
+            { "name": "status", "shape": "string", "required": true }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "screen",
+      "fields": [
+        { "name": "image", "shape": "string", "required": true },
+        { "name": "width", "shape": "number", "required": true },
+        { "name": "height", "shape": "number", "required": true }
+      ]
+    },
+    { "type": "driver", "fields": [{ "name": "driver", "shape": "\"user\" | \"agent\"", "required": true }] },
+    { "type": "vault", "fields": [{ "name": "items", "shape": "array", "required": true }] },
+    {
+      "type": "vault_result",
+      "fields": [
+        { "name": "ok", "shape": "boolean", "required": true },
+        { "name": "message", "shape": "string", "required": true }
+      ]
+    },
+    { "type": "work_status", "fields": [{ "name": "status", "shape": "object | null", "required": true }] }
+  ]
+}

@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  pull_request:
+
+jobs:
+  lanes:
+    name: lanes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check zones
+        env:
+          LANES_BASE: ${{ github.event.pull_request.base.sha }}
+          LANES_HEAD: ${{ github.sha }}
+        run: node scripts/check-lanes.mjs
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm ci --prefix frontend
+      - run: npm test
