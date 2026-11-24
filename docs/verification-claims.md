@@ -1,10 +1,54 @@
 # Verification claims
 
-User-facing behaviors named by the four specs for `feat/challenge-takeover-status`. Each claim is what a person should see, how they reach it on http://127.0.0.1:8787, and what proves it. Network routing is not a claim.
+User-facing behaviors named by the specs for the current branch. Each claim is what a person should see, how they reach it on http://127.0.0.1:8788, and what proves it. Network routing is not a claim. The house stays on 8787 (one process); the page is on 8788.
 
-## This build — Plan block has room in the Mission column
+## This build — Split the house page into `frontend/` package
 
-Follow-up CSS in `public/index.html` (`.plan-block` / `#thread` flex). Drive these two first. Needs a live plan (End filled, at least one step) and enough Mission history that the old flex shrink would collapse Plan. Fake or live server is fine. Reuse `http://127.0.0.1:8787` when it is already Opero.
+Drive these five first on branch `feat/challenge-takeover-status` (or whatever is checked out). Fake house (`npm run dev:fake`) is OK. Reuse house on 8787 and page on 8788 when already healthy. Doctor and drives use 8788.
+
+### Two processes ready
+
+**Behavior.** From repo root, the house listens on `127.0.0.1:8787` and returns JSON health `{ "service": "opero-home", "ok": true }`. The page (`npm run dev:page`) serves the Opero UI at `http://127.0.0.1:8788`.
+
+**How to reach it.** Start or reuse house and page. Curl health on 8787; open or curl 8788.
+
+**Proof.** Health JSON matches. Page returns the Opero UI (HTTP 200). Doctor / drive target 8788 only.
+
+### House shell on 8788
+
+**Behavior.** Open `http://127.0.0.1:8788`. Heading Opero is visible. Connection pill is Live or מחובר. Key card is hidden (`aria-hidden` true) in fake mode. Composer placeholder Give a mission…; Send, Take control, I'm done, and Vault are present.
+
+**How to reach it.** Open the page on 8788 with a ready fake (or live) house.
+
+**Proof.** Doctor / `house-shell` evidence: title Opero, conn Live/מחובר, keyHidden true, placeholder Give a mission… (or Hebrew), buttons Send / Take control / I'm done / Vault (or Hebrew names).
+
+### Socket across origins
+
+**Behavior.** The page on 8788 talks to the house WebSocket on 8787. Sending a mission in fake mode produces thread activity and a plan end (fake planner returns plan ready).
+
+**How to reach it.** On 8788, Send a clear mission while house is fake on 8787.
+
+**Proof.** WebSocket connects to 8787 from the 8788 page. Thread shows the mission and agent activity. End field is filled (plan ready).
+
+### Local labels
+
+**Behavior.** Chrome strings come from the page (`frontend/labels.js`), not a `labels` WebSocket event. Switching Language to Hebrew updates button names (שליחה, קחו שליטה, סיימתי, כספת) without needing a labels push from the house.
+
+**How to reach it.** On the page, change Language to עברית / Hebrew.
+
+**Proof.** Button captions become שליחה, קחו שליטה, סיימתי, כספת. Received WebSocket frames during the switch do not include `type: labels`. Page may send `{ type: "language", language: "he" }`.
+
+### CONTRACT exists
+
+**Behavior.** `frontend/CONTRACT.md` documents the socket boundary. The house no longer serves `public/index.html`.
+
+**How to reach it.** Inspect the repo tree and CONTRACT.md.
+
+**Proof.** `frontend/CONTRACT.md` exists and names ports 8787/8788 and the message types. `public/index.html` is absent.
+
+## Prior build — Plan block has room in the Mission column
+
+Follow-up CSS in `frontend/index.html` (`.plan-block` / `#thread` flex). Drive these two first. Needs a live plan (End filled, at least one step) and enough Mission history that the old flex shrink would collapse Plan. Fake or live house is fine. Reuse the house on 8787 and open the page at `http://127.0.0.1:8788` when Opero is already running.
 
 ### Plan section shows its content
 
@@ -24,7 +68,7 @@ Follow-up CSS in `public/index.html` (`.plan-block` / `#thread` flex). Drive the
 
 ## This build — fixed conversation window
 
-Prior CSS layout claims (`public/index.html`). Drive when verifying the full fixed-window set. Fake or live server is fine: the claims are viewport and scroll behavior, not planner replies. Reuse `http://127.0.0.1:8787` when it is already Opero.
+Prior CSS layout claims (`frontend/index.html`). Drive when verifying the full fixed-window set. Fake or live house is fine: the claims are viewport and scroll behavior, not planner replies. Reuse the house on 8787 and open the page at `http://127.0.0.1:8788` when Opero is already running.
 
 ### Page stays one screen tall
 

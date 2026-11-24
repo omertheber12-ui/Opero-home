@@ -4,7 +4,7 @@ This brief describes the software that runs today. It is written so another mode
 
 The product intent lives in `.cursor/plans/opero_agent_vision.md`. That document is the target. This file is the implementation. Where they disagree, the disagreement is called out in [Vision versus code](#vision-versus-code). Do not treat the vision as already built.
 
-One Node process serves one household. The user types a mission in a single chat. A planning model writes a visible plan and a checkable end. An acting model then picks one browser action per turn. Playwright drives a Browserbase Chrome session. A local encrypted vault can fill a saved secret without putting the secret in the model text. The chat, the plan, and a live screenshot share one web page.
+One house Node process (8787) plus one page process (8788) serve one household. The user types a mission in a single chat. A planning model writes a visible plan and a checkable end. An acting model then picks one browser action per turn. Playwright drives a Browserbase Chrome session. A local encrypted vault can fill a saved secret without putting the secret in the model text. The chat, the plan, and a live screenshot share one web page.
 
 ```mermaid
 flowchart LR
@@ -57,9 +57,9 @@ The planning model does not choose ordinary clicks. It supervises when progress 
 
 ## Process and chat
 
-Entry point: `src/chat/server.ts`. Dev server binds `127.0.0.1:8787` and serves `public/index.html` plus a WebSocket on the same port.
+Two processes. House entry point: `src/chat/server.ts` — binds `127.0.0.1:8787` for health JSON (`{ "service": "opero-home", "ok": true }`) and the WebSocket. Page: `frontend/` served on `127.0.0.1:8788` (`npm run dev:page`). The page does not import `src/`. Boundary and message types: [frontend/CONTRACT.md](../frontend/CONTRACT.md).
 
-There is one in-memory `HouseLoop`, one `Computer`, one `Vault`, and one house record (`house_builder`). Every connected browser tab receives the same events. The planner owns the chat. A written plan only guides the one action agent. It is not a lock on the chat and does not decide whether an agent may start.
+There is one in-memory `HouseLoop`, one `Computer`, one `Vault`, and one house record (`house_builder`). Every connected browser tab receives the same events. The planner owns the chat. A written plan only guides the one action agent. It is not a lock on the chat and does not decide whether an agent may start. Chrome strings (titles, placeholders, button captions) live in `frontend/labels.js`; the house no longer sends `labels`.
 
 A new mission that is still vague gets a clarifying question before any plan or browser. When a plan is clear, the one action agent starts. While that agent works, a status line reaches the planner without clearing the plan. A different mission aborts the current one (status saved as `aborted`) and starts immediately. The conversation thread in `data/conversation.json` is the source of truth: lines are replayed on connect, and a mission quiet for 30 minutes becomes `aborted` so it cannot block the next request.
 
@@ -76,14 +76,14 @@ The page talks to the server with JSON messages:
 | `answer` | Same door as `mission`. The planner hears the line. |
 | `edit_end` | Replace the mission end. Steps are not edited from the page |
 | `level` | House level 1 or 2, used on the next mission start |
-| `language` | `en` or `he`. UI labels switch. The planner prompt includes the language |
+| `language` | `en` or `he`. Stored for the planner; the page updates its own chrome from `frontend/labels.js` |
 | `driver` | `user` freezes the agent. `agent` resumes `pursue` |
 | `click`, `type`, `press`, `scroll` | Applied only while the driver is `user` |
 | `vault_save`, `vault_remove`, `vault_list` | Local vault |
 | `save_key` | Verify and store the xAI key, then swap in the live planner and actor |
 | `work_status` | Read the status board |
 
-The server broadcasts `thread`, `message`, `plan`, `question`, `status`, `driver`, `thinking`, `screen`, `labels`, `settings`, `ready`, and `vault`. On connect it sends the saved thread so the page can scroll history.
+The server broadcasts `thread`, `message`, `plan`, `question`, `status`, `driver`, `thinking`, `screen`, `settings`, `ready`, and `vault`. It does not send `labels`. On connect it sends the saved thread so the page can scroll history.
 
 While the mission is `running` or `waiting_on_user`, the server screenshots the page every 1 second and broadcasts a JPEG. That picture is for the person. The acting model may also receive a redacted screenshot for sparse pages, Rescue, navigation failure, review requests, or pointer clicks. Ten quiet minutes after the last activity, the server closes the browser session (`grace`). A later message wakes it again.
 
@@ -412,7 +412,8 @@ The vision is still the product target. These are the gaps a consultant should n
 | `src/computer/challenge.ts` | Bot-check detection |
 | `src/vault/vault.ts` | Encrypted details |
 | `src/store/house-store.ts` | `data/house.json` |
-| `public/index.html` | The single chat page |
+| `frontend/` | Page package on 8788: `index.html`, `labels.js`, `pointer.js`, `server.mjs` |
+| `frontend/CONTRACT.md` | Page ↔ house socket and DOM contract |
 | `.cursor/plans/opero_agent_vision.md` | Product target, not a description of this code |
 
 ## Constraints that are deliberate

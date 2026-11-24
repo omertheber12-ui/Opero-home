@@ -1,25 +1,32 @@
 ---
 name: verify-opero
-description: Drive the Opero house page at http://127.0.0.1:8787 the way a person does, and capture evidence. Use when verifying Opero chat, plan, Computer, or a spec claim. Opero is one shared in-memory server.
+description: Drive the Opero page at http://127.0.0.1:8788 the way a person does, and capture evidence. Use when verifying Opero chat, plan, Computer, or a spec claim. Opero is one shared in-memory house plus a page process.
 ---
 
 # Verify Opero
 
-Opero is a local web house. A person opens one page with a mission thread, a plan, and a Computer picture. The server on port 8787 is shared. Two drivers corrupt the same mission.
+Opero is a local web house. A person opens one page with a mission thread, a plan, and a Computer picture. The house on port 8787 is shared (WebSocket + health). The page on port 8788 is the UI. Two drivers on the same house corrupt the same mission.
 
 ## Launch
 
-Reuse the server that is already listening on `127.0.0.1:8787` when `curl -fsS http://127.0.0.1:8787` returns the Opero page. Do not start a second copy. Do not kill a process by name.
+Reuse the house already listening on `127.0.0.1:8787` when `curl -fsS http://127.0.0.1:8787` returns health JSON (`{"service":"opero-home","ok":true}` or equivalent). Do not start a second house. Do not kill a process by name. The page process on 8788 is fine to restart.
 
-If nothing is listening, from the repo root:
+If nothing is listening, from the repo root start both:
 
 ```bash
 npm run dev
+# or: npm run dev:fake
 ```
 
-Ready means the process prints `Opero Home → http://127.0.0.1:8787` and the page is usable: the heading Opero is visible, the connection pill says `Live` or `מחובר`, and the Connect Grok card is hidden. A process that only accepts a socket is not ready. `npm run dev:fake` is the stand-in when a claim can be checked without Grok. Do not switch a live server to fake. If the setup card is waiting on a key, stop.
+In a second terminal:
 
-Teardown of a server this run started is `kill` on that process id only, after evidence is copied. A reused server stays up.
+```bash
+npm run dev:page
+```
+
+Ready means **both** processes are up: `curl -fsS http://127.0.0.1:8787` returns health JSON, and `curl -fsS http://127.0.0.1:8788` (or opening that URL) returns the Opero page. Doctor and drives use `http://127.0.0.1:8788`. A house that only accepts a socket without a page, or a page without a live house, is not ready. `npm run dev:fake` is the stand-in when a claim can be checked without Grok. Do not switch a live house to fake. If the setup card is waiting on a key, stop.
+
+Teardown of a house this run started is `kill` on that process id only, after evidence is copied. A reused house stays up. A page process started for this run may be stopped or restarted freely.
 
 ## Doctor
 
@@ -29,7 +36,7 @@ Run this before every drive. It is read-only.
 node .cursor/skills/verify-opero/bin/drive.mjs doctor
 ```
 
-It passes only when the page at `http://127.0.0.1:8787` shows the Opero heading, the connection pill is `Live` or `מחובר`, and the key card is hidden (`aria-hidden="true"`). It writes `.cursor/skills/verify-opero/evidence/doctor/`. A failing doctor means do not drive.
+It passes only when the page at `http://127.0.0.1:8788` shows the Opero heading, the connection pill is `Live` or `מחובר`, and the key card is hidden (`aria-hidden="true"`). It writes `.cursor/skills/verify-opero/evidence/doctor/`. A failing doctor means do not drive.
 
 ## Drive
 
@@ -56,7 +63,7 @@ Each command writes `.cursor/skills/verify-opero/evidence/<name>/` with `aria.tx
 node .cursor/skills/verify-opero/bin/drive.mjs cleanup
 ```
 
-Cleanup deletes `.cursor/skills/verify-opero/tmp/` only. It does not delete `evidence/`, and it does not kill the shared server.
+Cleanup deletes `.cursor/skills/verify-opero/tmp/` only. It does not delete `evidence/`, and it does not kill the shared house.
 
 ## Helpers
 

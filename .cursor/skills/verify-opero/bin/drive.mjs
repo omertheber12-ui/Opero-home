@@ -7,7 +7,7 @@ import { chromium } from "playwright"
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
 const evidenceRoot = join(root, "evidence")
 const tmpRoot = join(root, "tmp")
-const pageUrl = process.env.OPERO_URL ?? "http://127.0.0.1:8787"
+const pageUrl = process.env.OPERO_URL ?? "http://127.0.0.1:8788"
 
 function arg(name, fallback = "") {
   const index = process.argv.indexOf(name)

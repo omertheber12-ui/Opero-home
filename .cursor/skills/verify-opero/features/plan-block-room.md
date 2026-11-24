@@ -1,6 +1,6 @@
 # Plan block has room in the Mission column
 
-With a live plan under a long Mission thread, Plan at the bottom of Mission keeps enough height to show End and steps. `.plan-block` uses `flex: 0 0 auto` with `max-height: 40%` and `overflow: auto`. `#thread` takes leftover space with `flex: 1 1 0`. CSS-only in `public/index.html`.
+With a live plan under a long Mission thread, Plan at the bottom of Mission keeps enough height to show End and steps. `.plan-block` uses `flex: 0 0 auto` with `max-height: 40%` and `overflow: auto`. `#thread` takes leftover space with `flex: 1 1 0`. CSS-only in `frontend/index.html`.
 
 ## Sub-features
 
@@ -9,7 +9,7 @@ With a live plan under a long Mission thread, Plan at the bottom of Mission keep
 
 ## How to get to it (user POV)
 
-- Open `http://127.0.0.1:8787`.
+- Open `http://127.0.0.1:8788`.
 - Have End filled and at least one step in Plan.
 - Have enough Mission history that `#thread` would compete with Plan for column height.
 
@@ -18,7 +18,7 @@ With a live plan under a long Mission thread, Plan at the bottom of Mission keep
 Preconditions:
 
 - `node .cursor/skills/verify-opero/bin/drive.mjs doctor` exits 0.
-- Claims are layout-only once a plan exists; reuse the shared server on 8787.
+- Claims are layout-only once a plan exists; reuse the shared house on 8787 and the page on 8788.
 
 Drive each claim from [docs/verification-claims.md](../../../../docs/verification-claims.md) under "This build — Plan block has room in the Mission column":
 
@@ -31,4 +31,4 @@ Proof artifacts go under `.cursor/skills/verify-opero/evidence/plan-block-room/`
 
 - Without a live plan (empty End / no steps), this claim is Not checked — do not pass via an empty Plan.
 - Without a tall thread, flex competition never shows; pad history or use existing long conversation.
-- Do not start a second server on 8787. Do not kill by process name.
+- Do not start a second house on 8787. Do not kill by process name. The page on 8788 is fine to restart.

@@ -4,6 +4,7 @@ export const XAI_MODELS_URL = `${XAI_API_ORIGIN}/models`
 
 export const BIND_HOST = "127.0.0.1"
 export const DEFAULT_PORT = 8787
+export const HOUSE_HEALTH = { service: "opero-home", ok: true } as const
 export const DEFAULT_MODEL = "grok-4.7"
 /** Plan and chat stay on the deepest setting. A review is a short verdict, so it uses the fast setting of the same model. */
 export const PLANNER_REASONING_EFFORT = "high"

@@ -9,7 +9,15 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:8787](http://127.0.0.1:8787). If no Grok key is set, the setup card asks for your xAI API key and saves it to `data/xai.key` on this machine.
+In a second terminal:
+
+```bash
+npm run dev:page
+```
+
+Open [http://127.0.0.1:8788](http://127.0.0.1:8788). The house socket and health JSON stay on [http://127.0.0.1:8787](http://127.0.0.1:8787). The page ↔ house boundary is documented in [frontend/CONTRACT.md](frontend/CONTRACT.md).
+
+If no Grok key is set, the setup card asks for your xAI API key and saves it to `data/xai.key` on this machine.
 
 Optional: copy `.env.example` to `.env` and set `XAI_API_KEY` and `BROWSERBASE_API_KEY`.
 
@@ -19,11 +27,15 @@ Optional: copy `.env.example` to `.env` and set `XAI_API_KEY` and `BROWSERBASE_A
 MODEL=fake npm run dev
 ```
 
+Still start the page with `npm run dev:page` and open 8788.
+
 ### Tests
 
 ```bash
 npm test
 ```
+
+Runs the house suite, then the frontend suite (`npm test --prefix frontend`).
 
 ## Environment
 
@@ -35,7 +47,7 @@ npm test
 | `OPERO_PLANNER_MODEL` | Default `grok-4.7` |
 | `OPERO_ACTOR_MODEL` | Default `grok-4.7` |
 | `OPERO_VAULT_KEY` | Auto-generated into `data/vault.key` when unset |
-| `PORT` | Default `8787` |
+| `PORT` | House bind port. Default `8787` (health + WebSocket) |
 | `MODEL` | `live` (default) or `fake` |
 
 ## Notes

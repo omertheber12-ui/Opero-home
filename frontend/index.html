@@ -522,7 +522,11 @@
       </div>
     </div>
 
-    <script>
+    <script type="module">
+      import { labels as labelMap } from "./labels.js"
+      import { mapPictureClick as mapClick } from "./pointer.js"
+      import { HOUSE_WS_URL } from "./config.mjs"
+
       const thread = document.querySelector("#thread")
       const steps = document.querySelector("#steps")
       const end = document.querySelector("#end")
@@ -557,7 +561,13 @@
       let screenWidth = VIEWPORT_WIDTH
       let screenHeight = VIEWPORT_HEIGHT
 
-      const socket = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host)
+      let socket
+      applyLabels(labelMap.en, "en")
+
+      const params = new URLSearchParams(location.search)
+      const houseOverride = params.get("house")
+      const houseWs = houseOverride || HOUSE_WS_URL
+      socket = new WebSocket(houseWs)
       const send = (event) => {
         if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(event))
       }
@@ -573,11 +583,11 @@
 
       socket.addEventListener("message", (event) => {
         const message = JSON.parse(event.data)
-        if (message.type === "labels") applyLabels(message.labels, message.language)
         if (message.type === "settings") {
           document.querySelector("#level").value = String(message.level)
           document.querySelector("#language").value = message.language
           if (message.workStatusPollMs) workStatusPollMs = message.workStatusPollMs
+          applyLabels(labelMap[message.language] || labelMap.en, message.language)
         }
         if (message.type === "ready") {
           ready = message.ready
@@ -647,7 +657,11 @@
       })
       end.addEventListener("change", () => send({ type: "edit_end", end: end.value }))
       document.querySelector("#level").addEventListener("change", (event) => send({ type: "level", level: Number(event.target.value) }))
-      document.querySelector("#language").addEventListener("change", (event) => send({ type: "language", language: event.target.value }))
+      document.querySelector("#language").addEventListener("change", (event) => {
+        const language = event.target.value
+        send({ type: "language", language })
+        applyLabels(labelMap[language], language)
+      })
       document.querySelector("#take").addEventListener("click", () => {
         driver = "user"
         updateDriverUi()
@@ -712,19 +726,16 @@
 
       function mapPictureClick(clientX, clientY) {
         const box = screen.getBoundingClientRect()
-        if (!box.width || !box.height || !screenWidth || !screenHeight) return null
-        const scale = Math.min(box.width / screenWidth, box.height / screenHeight)
-        const drawnWidth = screenWidth * scale
-        const drawnHeight = screenHeight * scale
-        const offsetX = (box.width - drawnWidth) / 2
-        const offsetY = (box.height - drawnHeight) / 2
-        const localX = clientX - box.left - offsetX
-        const localY = clientY - box.top - offsetY
-        if (localX < 0 || localY < 0 || localX > drawnWidth || localY > drawnHeight) return null
-        return {
-          x: Math.round(localX / scale),
-          y: Math.round(localY / scale),
-        }
+        return mapClick({
+          clientX,
+          clientY,
+          boxLeft: box.left,
+          boxTop: box.top,
+          boxWidth: box.width,
+          boxHeight: box.height,
+          imageWidth: screenWidth,
+          imageHeight: screenHeight,
+        })
       }
 
       function showThinking(text) {
@@ -865,7 +876,7 @@
         screen.alt = text.screen
         const empty = document.querySelector("#steps-empty")
         if (empty) empty.textContent = text.stepsEmpty
-        if (socket.readyState === WebSocket.OPEN) connText.textContent = text.connected
+        if (socket?.readyState === WebSocket.OPEN) connText.textContent = text.connected
         else connText.textContent = text.disconnected
         readyBadge.textContent = ready ? text.keySaved : text.keyTitle
         updateDriverUi()

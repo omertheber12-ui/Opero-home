@@ -6,7 +6,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run && npm test --prefix frontend",
     "dev": "tsx src/chat/server.ts",
     "dev:fake": "MODEL=fake tsx src/chat/server.ts",
     "dev:page": "node frontend/server.mjs"

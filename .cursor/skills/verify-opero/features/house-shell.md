@@ -9,7 +9,7 @@ The house page is one chat, one plan, and one Computer. A person can see all thr
 
 ## How to get to it (user POV)
 
-- Open `http://127.0.0.1:8787`.
+- Open `http://127.0.0.1:8788`.
 
 ## Driving it with control-ui
 

@@ -1,7 +1,5 @@
 import { createServer } from "node:http"
-import { readFile } from "node:fs/promises"
-import { dirname, join } from "node:path"
-import { fileURLToPath } from "node:url"
+import { join } from "node:path"
 import { WebSocketServer, type WebSocket } from "ws"
 import { HouseLoop, type LoopEvent } from "../agent/loop.js"
 import { createStatusBoard } from "../agent/work-status.js"
@@ -18,12 +16,12 @@ import { isLiveMission } from "../domain/mission.js"
 import { markCommitUnknown } from "../domain/policy.js"
 import { createTraceWriter } from "../domain/trace.js"
 import type { Language, Level, Mission } from "../domain/types.js"
-import { labels } from "./i18n.js"
 import {
   BIND_HOST,
   DEFAULT_MODEL,
   DEFAULT_PORT,
   GRACE_POLL_MS,
+  HOUSE_HEALTH,
   MISSING_GROK_KEY,
   MISSING_GROK_KEY_ASK,
   MISSING_GROK_KEY_SHORT,
@@ -45,9 +43,6 @@ const dataDir = process.env.OPERO_DATA_DIR ?? join(process.cwd(), "data")
 const mode = process.env.MODEL ?? "live"
 const plannerModel = process.env.OPERO_PLANNER_MODEL ?? DEFAULT_MODEL
 const actorModel = process.env.OPERO_ACTOR_MODEL ?? DEFAULT_MODEL
-const root = dirname(fileURLToPath(import.meta.url))
-const pagePath = join(root, "../../public/index.html")
-
 await ensureVaultKey(dataDir)
 let xaiKey = mode === "fake" ? "fake" : await loadXaiKey(dataDir)
 
@@ -239,16 +234,14 @@ if (
   void loop.reconcileAfterRestart().then(() => persist())
 }
 
-const server = createServer(async (_request, response) => {
-  const html = await readFile(pagePath)
-  response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
-  response.end(html)
+const server = createServer((_request, response) => {
+  response.writeHead(200, { "Content-Type": "application/json; charset=utf-8" })
+  response.end(JSON.stringify(HOUSE_HEALTH))
 })
 
 const wss = new WebSocketServer({ server })
 wss.on("connection", (socket) => {
   sockets.add(socket)
-  send(socket, { type: "labels", language: house.language, labels: labels[house.language] })
   send(socket, {
     type: "settings",
     level: house.level,
@@ -335,7 +328,6 @@ async function onMessage(socket: WebSocket, raw: string): Promise<void> {
     house = withSettings(house, house.level, event.language)
     loop.language = event.language
     persist()
-    broadcast({ type: "labels", language: event.language, labels: labels[event.language] })
   }
   if (event.type === "driver" && (event.text === "user" || event.text === "agent")) {
     loop.setDriver(event.text)

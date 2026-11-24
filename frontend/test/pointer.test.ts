@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { mapPictureClick } from "../src/chat/pointer.js"
+import { mapPictureClick } from "../pointer.js"
 
 describe("picture clicks", () => {
   it("ignores letterbox padding and maps the painted image", () => {

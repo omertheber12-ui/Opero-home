@@ -1,6 +1,6 @@
 # Fixed conversation window
 
-The house stays one viewport tall. A long Mission history scrolls inside `#thread`. The app bar, composer, and Computer stay on screen. CSS-only in `public/index.html`.
+The house stays one viewport tall. A long Mission history scrolls inside `#thread`. The app bar, composer, and Computer stay on screen. CSS-only in `frontend/index.html`.
 
 ## Sub-features
 
@@ -11,7 +11,7 @@ The house stays one viewport tall. A long Mission history scrolls inside `#threa
 
 ## How to get to it (user POV)
 
-- Open `http://127.0.0.1:8787`.
+- Open `http://127.0.0.1:8788`.
 - Have enough Mission lines that `#thread` content is taller than the panel (existing conversation history is enough when the store already has many turns).
 - For narrow: resize the window to ≤960px wide.
 
@@ -20,7 +20,7 @@ The house stays one viewport tall. A long Mission history scrolls inside `#threa
 Preconditions:
 
 - `node .cursor/skills/verify-opero/bin/drive.mjs doctor` exits 0.
-- Claims are layout-only; `npm run dev` or an already-running Opero on 8787 is fine. Fake mode is acceptable.
+- Claims are layout-only; `npm run dev` + `npm run dev:page`, or an already-running house on 8787 and page on 8788, is fine. Fake mode is acceptable.
 
 Drive each claim from [docs/verification-claims.md](../../../../docs/verification-claims.md) under "This build — fixed conversation window":
 
@@ -36,4 +36,4 @@ Proof artifacts go under `.cursor/skills/verify-opero/evidence/fixed-layout-wide
 - Without enough thread lines, overflow never engages — pad by ensuring history is tall, not by weakening the claim.
 - The Computer *picture* (`#screen`) appears only after a screen frame; the idle Computer panel still counts as the Computer surface for visibility when no frame has arrived.
 - Button names follow the house language (Take control / I'm done or קחו שליטה / סיימתי).
-- Do not start a second server on 8787. Do not kill by process name.
+- Do not start a second house on 8787. Do not kill by process name. The page on 8788 is fine to restart.
