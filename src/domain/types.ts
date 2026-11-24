@@ -1,7 +1,8 @@
 export type Level = 1 | 2
 export type Language = "en" | "he"
 export type StepStatus = "pending" | "waiting" | "running" | "done" | "skipped"
-export type MissionStatus = "planning" | "running" | "waiting_on_user" | "done" | "blocked"
+export type MissionStatus = "planning" | "running" | "waiting_on_user" | "done" | "blocked" | "aborted"
+export type Outcome = "read" | "navigate" | "transact"
 
 export type Step = {
   id: string
@@ -12,6 +13,16 @@ export type Step = {
   status: StepStatus
   pause: boolean
   userPause: boolean
+}
+
+export type Approval = {
+  fingerprint: string
+  status: "pending" | "granted"
+}
+
+export type CommitRecord = {
+  fingerprint: string
+  outcome: "started" | "applied" | "unknown"
 }
 
 export type Mission = {
@@ -25,6 +36,15 @@ export type Mission = {
   failedDetails: string[]
   question: string | null
   questionReason: AskReason | null
+  outcome: Outcome
+  approval: Approval | null
+  lastCommit: CommitRecord | null
+  budget: number
+  modelCalls: number
+  startedAt: number
+  recoveryAttempts: number
+  stagnantActions: number
+  strategyId: string
 }
 
 export type AskReason =
@@ -53,6 +73,7 @@ export type AgentAction =
   | { type: "pointer_click"; x: number; y: number; commit: boolean }
   | { type: "fill_detail"; description: string; ref?: number }
   | { type: "read_cookies" }
+  | { type: "request_review"; reason: string }
   | { type: "ask"; question: string; reason: AskReason }
   | { type: "done"; evidence: string }
 
@@ -69,3 +90,4 @@ export type Verdict =
   | { type: "replace"; action: AgentAction }
   | { type: "ask"; question: string; reason: AskReason }
   | { type: "replan"; steps: Step[] }
+  | { type: "stop"; question: string }

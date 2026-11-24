@@ -25,6 +25,8 @@ describe("mission rules", () => {
     expect(canStart(waiting)).toBe(false)
     expect(canStart(null)).toBe(true)
     expect(canStart({ ...running, status: "done" })).toBe(true)
+    expect(canStart({ ...running, status: "aborted" })).toBe(true)
+    expect(canStart({ ...running, status: "blocked" })).toBe(true)
   })
 
   it("sets the end once", () => {

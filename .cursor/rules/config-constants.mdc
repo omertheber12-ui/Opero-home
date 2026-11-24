@@ -1,0 +1,43 @@
+---
+description: Put shared strings, URLs, and magic numbers in src/config.ts
+alwaysApply: true
+---
+
+# Config constants
+
+Hardcoded values that can be reused belong in [`src/config.ts`](src/config.ts). Do not scatter duplicates across the codebase.
+
+## Put in config
+
+- User-facing messages (asks, notes, status text, errors)
+- URLs, hosts, API origins, path prefixes
+- Timeouts, limits, budgets, intervals, viewport sizes
+- Feature thresholds (stall, strategy, sparse screenshot, recent history)
+
+## Keep local
+
+- One-off test fixtures
+- Truly unique one-line prompt scaffolding that is not reused
+- Domain regexes that encode policy logic (unless shared)
+
+## How
+
+```typescript
+// ❌ BAD — magic string in the loop
+this.ask("I stopped after many actions without reaching the end.", "verify")
+
+// ✅ GOOD — shared constant
+import { BUDGET_STOP_QUESTION } from "../config.js"
+this.ask(BUDGET_STOP_QUESTION, "verify")
+```
+
+```typescript
+// ❌ BAD
+setInterval(tick, 30_000)
+
+// ✅ GOOD
+import { GRACE_POLL_MS } from "../config.js"
+setInterval(tick, GRACE_POLL_MS)
+```
+
+When adding a new shared value: export it from `src/config.ts`, import it where used, and prefer an existing name over inventing a second constant for the same meaning.

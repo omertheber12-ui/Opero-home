@@ -8,6 +8,10 @@ export type WorkStatus = {
   challenge: boolean
   updatedAt: number
   detail: string
+  stagnantActions?: number
+  failedOpen?: boolean
+  siteError?: boolean
+  budgetUsed?: boolean
 }
 
 export type StatusBoard = {

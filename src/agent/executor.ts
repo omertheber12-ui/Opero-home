@@ -1,4 +1,5 @@
-import { formatControls } from "../computer/snapshot.js"
+import { formatControls, formatOutline } from "../computer/snapshot.js"
+import { ACTOR_REASONING_EFFORT, PAGE_TITLE_IS_HEADING } from "../config.js"
 import { complete, SYSTEM_TEXT } from "../model/chat-client.js"
 import type { AgentAction, Mission, PageControl } from "../domain/types.js"
 import { parseAction } from "./planner.js"
@@ -8,9 +9,12 @@ export type Executor = {
     mission: Mission
     pageText: string
     url: string
+    title?: string
+    headings?: string[]
     controls: PageControl[]
     screenshot?: Buffer
     notes: string[]
+    snapshotId?: string
   }): Promise<AgentAction>
 }
 
@@ -27,6 +31,9 @@ Current step site: ${step?.site ?? ""}
 Current step instruction: ${step?.text ?? ""}
 Current step is finished when: ${step?.doneWhen ?? ""}
 URL: ${input.url}
+${formatOutline(input.title ?? "", input.headings ?? [])}
+${PAGE_TITLE_IS_HEADING}
+When the step asks for the main heading, reply {"type":"done","evidence":"the PAGE_TITLE or the first HEADINGS line, copied exactly"}.
 Notes from the user: ${input.notes.join("\n")}
 CONTROLS (only these numbers are interactive; numbers die after this turn):
 ${formatControls(input.controls)}
@@ -42,10 +49,12 @@ Otherwise reply with one action:
 {"type":"wait","ms":1000}
 {"type":"pointer_click","x":0,"y":0,"commit":false} only when no control fits
 {"type":"fill_detail","description":"...","ref":4}
+{"type":"request_review","reason":"the page does not match the plan"}
 {"type":"done","evidence":"lines copied from the page"}
 {"type":"ask","question":"...","reason":"fact"}
-While the facts are not yet in PAGE_DATA, prefer click, type, or scroll on CONTROLS.
-Every headline, date, and name in done.evidence must appear in PAGE_DATA. Do not use training knowledge.
+While the facts are not yet in PAGE_TITLE, HEADINGS, or PAGE_DATA, prefer click, type, or scroll on CONTROLS.
+If the strategy is failing, reply request_review instead of repeating ineffective clicks.
+Every headline, date, and name in done.evidence must appear in PAGE_TITLE, HEADINGS, or PAGE_DATA. Do not use training knowledge.
 If earlier done was rejected on this URL, scroll or try another control before another done.
 The person only reads the chat. When PAGE_DATA contains the answer, reply done with those lines only — no summary wrapper.`,
         },
@@ -56,7 +65,11 @@ The person only reads the chat. When PAGE_DATA contains the answer, reply done w
           image_url: { url: `data:image/jpeg;base64,${input.screenshot.toString("base64")}` },
         })
       }
-      const parsed = await complete({ model, messages: [{ role: "user", content }] })
+      const parsed = await complete({
+        model,
+        messages: [{ role: "user", content }],
+        reasoningEffort: ACTOR_REASONING_EFFORT,
+      })
       return parseAction(parsed)
     },
   }

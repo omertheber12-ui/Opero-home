@@ -10,6 +10,9 @@ import {
   MISSING_BROWSERBASE_KEY,
   NAV_TIMEOUT_MS,
   PAGE_TEXT_WAIT_MS,
+  SCREENSHOT_MASK_ATTR,
+  SCREENSHOT_MASK_ID_PREFIX,
+  SCREENSHOT_MASK_VALUE,
   SCREENSHOT_QUALITY,
   SCROLL_DELTA,
   VIEWPORT_HEIGHT,
@@ -33,6 +36,7 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
   let release: (() => Promise<void>) | null = null
   let liveViewUrl = ""
   let driver: "agent" | "user" = "agent"
+  let snapSeq = 0
 
   const freeze = () => {
     if (driver === "user") throw new AgentFrozen()
@@ -63,9 +67,30 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
 
   const locatorFor = (ref: number) => requirePage().locator(`[data-opero-ref="${ref}"]`).first()
 
+  const sessionAlive = (): boolean => {
+    if (!browser || !context || !page) return false
+    try {
+      if (!browser.isConnected()) return false
+      return !page.isClosed()
+    } catch {
+      return false
+    }
+  }
+
+  const dropSession = async () => {
+    await browser?.close().catch(() => undefined)
+    await release?.().catch(() => undefined)
+    browser = null
+    release = null
+    context = null
+    page = null
+    liveViewUrl = ""
+  }
+
   return {
     async wake() {
-      if (context) return
+      if (sessionAlive()) return
+      await dropSession()
       const apiKey = deps.apiKey ?? (await loadBrowserbaseKey(dataDir))
       if (!deps.api && !apiKey) throw new Error(MISSING_KEY)
       const projectId = deps.projectId ?? process.env.BROWSERBASE_PROJECT_ID?.trim() ?? undefined
@@ -80,13 +105,7 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
       await page.setViewportSize({ width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT })
     },
     async close() {
-      await browser?.close().catch(() => undefined)
-      await release?.().catch(() => undefined)
-      browser = null
-      release = null
-      context = null
-      page = null
-      liveViewUrl = ""
+      await dropSession()
     },
     async screenshot() {
       if (!page) return Buffer.from("")
@@ -94,6 +113,62 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
         return await page.screenshot({ type: "jpeg", quality: SCREENSHOT_QUALITY })
       } catch {
         return Buffer.from("")
+      }
+    },
+    async screenshotForModel(secrets: string[] = []) {
+      if (!page) return Buffer.from("")
+      const current = page
+      await current
+        .evaluate(
+          ({ secretList, maskAttr, maskPrefix, maskValue }) => {
+            const w = window as unknown as { __operoMask?: Array<{ id: string; value: string; type: string }> }
+            const restores: Array<{ id: string; value: string; type: string }> = []
+            const nodes = Array.from(document.querySelectorAll("input, textarea")) as Array<
+              HTMLInputElement | HTMLTextAreaElement
+            >
+            nodes.forEach((el, index) => {
+              const value = el.value
+              const type = el instanceof HTMLInputElement ? el.type : "textarea"
+              const hide =
+                type === "password" || secretList.some((secret) => secret.length > 0 && value.includes(secret))
+              if (!hide) return
+              const id = `${maskPrefix}${index}`
+              el.setAttribute(maskAttr, id)
+              restores.push({ id, value, type })
+              if (el instanceof HTMLInputElement && type !== "password") el.type = "password"
+              el.value = maskValue
+            })
+            w.__operoMask = restores
+          },
+          {
+            secretList: secrets,
+            maskAttr: SCREENSHOT_MASK_ATTR,
+            maskPrefix: SCREENSHOT_MASK_ID_PREFIX,
+            maskValue: SCREENSHOT_MASK_VALUE,
+          },
+        )
+        .catch(() => undefined)
+      try {
+        return await current.screenshot({ type: "jpeg", quality: SCREENSHOT_QUALITY })
+      } catch {
+        return Buffer.from("")
+      } finally {
+        await current
+          .evaluate((maskAttr) => {
+            const w = window as unknown as { __operoMask?: Array<{ id: string; value: string; type: string }> }
+            for (const item of w.__operoMask ?? []) {
+              const el = document.querySelector(`[${maskAttr}="${item.id}"]`) as
+                | HTMLInputElement
+                | HTMLTextAreaElement
+                | null
+              if (!el) continue
+              if (el instanceof HTMLInputElement) el.type = item.type === "textarea" ? "text" : item.type
+              el.value = item.value
+              el.removeAttribute(maskAttr)
+            }
+            w.__operoMask = []
+          }, SCREENSHOT_MASK_ATTR)
+          .catch(() => undefined)
       }
     },
     async pageText() {
@@ -104,13 +179,25 @@ export async function openChrome(dataDir: string, deps: CloudDeps = {}): Promise
       return page?.url() ?? BLANK_URL
     },
     async snapshot(): Promise<PageSnapshot> {
-      if (!page) return { url: BLANK_URL, text: "", controls: [] }
-      const [url, text, controls] = await Promise.all([
+      snapSeq += 1
+      const id = `snap${snapSeq}`
+      if (!page) return { id, url: BLANK_URL, text: "", title: "", headings: [], controls: [] }
+      const [url, text, controls, shape] = await Promise.all([
         Promise.resolve(page.url()),
         page.locator("body").innerText().catch(() => ""),
         collectControls(page).catch(() => [] as Awaited<ReturnType<typeof collectControls>>),
+        page
+          .evaluate(() => {
+            const title = (document.title || "").replace(/\s+/g, " ").trim().slice(0, 180)
+            const headingTexts = Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6"))
+              .map((el) => (el.textContent || "").replace(/\s+/g, " ").trim())
+              .filter((value) => value.length > 0)
+              .slice(0, 8)
+            return { title, headingTexts }
+          })
+          .catch(() => ({ title: "", headingTexts: [] as string[] })),
       ])
-      return { url, text, controls }
+      return { id, url, text, title: shape.title, headings: shape.headingTexts, controls }
     },
     async goto(url: string) {
       freeze()

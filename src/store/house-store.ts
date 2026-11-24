@@ -1,8 +1,21 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
-import type { House, Language, Level, Mission } from "../domain/types.js"
+import type { AgentAction, House, Language, Level, Mission } from "../domain/types.js"
 
-type Saved = { house: House; mission: Mission | null }
+export type SavedRuntime = {
+  driver: "agent" | "user"
+  notes: string[]
+  recent: AgentAction[]
+  previousAction: AgentAction | null
+  previousUrl: string
+  lastActivityMs: number
+}
+
+export type Saved = {
+  house: House
+  mission: Mission | null
+  runtime?: SavedRuntime
+}
 
 export async function openHouse(dataDir: string): Promise<Saved> {
   await mkdir(dataDir, { recursive: true })
@@ -20,13 +33,20 @@ export async function openHouse(dataDir: string): Promise<Saved> {
     profileDir: join(dataDir, "profile"),
     vaultPath: join(dataDir, "vault.json"),
   }
-  const saved = { house, mission: null }
+  const saved: Saved = { house, mission: null }
   await writeFile(file, JSON.stringify(saved, null, 2))
   return saved
 }
 
-export async function saveHouse(dataDir: string, house: House, mission: Mission | null): Promise<void> {
-  await writeFile(join(dataDir, "house.json"), JSON.stringify({ house, mission }, null, 2))
+export async function saveHouse(
+  dataDir: string,
+  house: House,
+  mission: Mission | null,
+  runtime?: SavedRuntime,
+): Promise<void> {
+  const payload: Saved = { house, mission }
+  if (runtime) payload.runtime = runtime
+  await writeFile(join(dataDir, "house.json"), JSON.stringify(payload, null, 2))
 }
 
 export function withSettings(house: House, level: Level, language: Language): House {

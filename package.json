@@ -8,7 +8,8 @@
   "scripts": {
     "test": "vitest run",
     "dev": "tsx src/chat/server.ts",
-    "dev:fake": "MODEL=fake tsx src/chat/server.ts"
+    "dev:fake": "MODEL=fake tsx src/chat/server.ts",
+    "dev:page": "node frontend/server.mjs"
   },
   "dependencies": {
     "@browserbasehq/sdk": "^2.29.0",

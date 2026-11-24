@@ -1,5 +1,5 @@
 import type { PageControl } from "../domain/types.js"
-import { BLANK_URL } from "../config.js"
+import { BLANK_URL, FAKE_LIVE_VIEW_URL } from "../config.js"
 
 export class AgentFrozen extends Error {
   constructor() {
@@ -9,8 +9,11 @@ export class AgentFrozen extends Error {
 }
 
 export type PageSnapshot = {
+  id: string
   url: string
   text: string
+  title: string
+  headings: string[]
   controls: PageControl[]
 }
 
@@ -18,6 +21,7 @@ export type Computer = {
   wake(): Promise<void>
   close(): Promise<void>
   screenshot(): Promise<Buffer>
+  screenshotForModel(secrets?: string[]): Promise<Buffer>
   pageText(): Promise<string>
   url(): Promise<string>
   snapshot(): Promise<PageSnapshot>
@@ -38,6 +42,8 @@ export type Computer = {
   setDriver(driver: "agent" | "user"): void
 }
 
+let snapSeq = 0
+
 export class FakeComputer implements Computer {
   driver: "agent" | "user" = "agent"
   calls: string[] = []
@@ -46,6 +52,7 @@ export class FakeComputer implements Computer {
   currentUrl = BLANK_URL
   awake = false
   controls: PageControl[] = []
+  lastSnapshotId = ""
 
   constructor(readonly profileDir: string) {}
 
@@ -64,6 +71,11 @@ export class FakeComputer implements Computer {
     return Buffer.from("screenshot")
   }
 
+  async screenshotForModel(_secrets: string[] = []): Promise<Buffer> {
+    this.calls.push("screenshotForModel")
+    return Buffer.from("screenshot-model")
+  }
+
   async pageText(): Promise<string> {
     return this.text
   }
@@ -73,7 +85,16 @@ export class FakeComputer implements Computer {
   }
 
   async snapshot(): Promise<PageSnapshot> {
-    return { url: this.currentUrl, text: this.text, controls: this.controls }
+    snapSeq += 1
+    this.lastSnapshotId = `snap${snapSeq}`
+    return {
+      id: this.lastSnapshotId,
+      url: this.currentUrl,
+      text: this.text,
+      title: "",
+      headings: [],
+      controls: this.controls,
+    }
   }
 
   async goto(url: string): Promise<void> {
@@ -143,7 +164,7 @@ export class FakeComputer implements Computer {
   }
 
   liveView(): string {
-    return "https://live.example/view"
+    return FAKE_LIVE_VIEW_URL
   }
 
   setDriver(driver: "agent" | "user"): void {

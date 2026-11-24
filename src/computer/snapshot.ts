@@ -51,6 +51,26 @@ export async function collectControls(page: Page): Promise<PageControl[]> {
   }, { nameLimit: CONTROL_NAME_LIMIT, maxControls: MAX_CONTROLS })
 }
 
+/** Body text plus the page name, so a title that is not a heading element still counts as on the page. */
+export function pageReading(input: { title?: string; headings?: string[]; text: string }): string {
+  const seen = new Set<string>()
+  const parts: string[] = []
+  for (const part of [input.title ?? "", ...(input.headings ?? []), input.text]) {
+    const trimmed = part.trim()
+    if (!trimmed || seen.has(trimmed)) continue
+    seen.add(trimmed)
+    parts.push(trimmed)
+  }
+  return parts.join("\n")
+}
+
+export function formatOutline(title: string, headings: string[]): string {
+  const lines = headings.length
+    ? headings.map((text, index) => `${index + 1}. ${text}`).join("\n")
+    : "(no heading element in the page body)"
+  return `PAGE_TITLE: ${title || "(none)"}\nHEADINGS:\n${lines}`
+}
+
 export function formatControls(controls: PageControl[]): string {
   if (controls.length === 0) return "(no interactive controls visible)"
   return controls.map((control) => `[${control.ref}] ${control.role}: ${control.name}`).join("\n")

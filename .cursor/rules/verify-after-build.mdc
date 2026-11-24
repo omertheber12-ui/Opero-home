@@ -1,0 +1,17 @@
+---
+description: The verification agent approves a build. A fail opens one follow-up and is not accepted.
+alwaysApply: true
+---
+
+# Verify after a build
+
+When a build in this chat is finished — a branch, a pull request, or a spec — hand it to the verification agent before you tell the user the build is done.
+
+- Pass the spec path or the claims, and the branch or pull request.
+- Wait for the verification agent's report.
+- Give that report to the user unchanged.
+- If no spec was named, still hand off. The verification agent asks for the spec and stops.
+
+The verification agent is the approver. The work is accepted only when its verdict is pass. Do not call the build done on tests, a clean tree, or a hypothesis. Trust what the drive saw. A failed claim stays failed.
+
+On a fail, the verification agent opens one follow-up in plan mode with the failed claims. That follow-up switches to agent mode and fixes them. Do not open a second follow-up. Do not fix the failures yourself before the report is back. Do not accept the work while the verdict is fail.

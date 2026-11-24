@@ -13,19 +13,28 @@ import { FakeComputer } from "../computer/computer.js"
 import { openChrome } from "../computer/playwright-computer.js"
 import { jpegSize } from "../computer/jpeg-size.js"
 import type { Computer } from "../computer/computer.js"
-import type { Language, Level } from "../domain/types.js"
+import { graceOpen } from "../domain/grace.js"
+import { isLiveMission } from "../domain/mission.js"
+import { markCommitUnknown } from "../domain/policy.js"
+import { createTraceWriter } from "../domain/trace.js"
+import type { Language, Level, Mission } from "../domain/types.js"
 import { labels } from "./i18n.js"
 import {
   BIND_HOST,
   DEFAULT_MODEL,
   DEFAULT_PORT,
+  GRACE_POLL_MS,
   MISSING_GROK_KEY,
   MISSING_GROK_KEY_ASK,
   MISSING_GROK_KEY_SHORT,
+  RESTART_QUESTION,
   SCREEN_INTERVAL_MS,
+  SUPERVISE_POLL_MS,
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
+  WORK_STATUS_POLL_MS,
 } from "../config.js"
+import { openConversation } from "../store/conversation-store.js"
 import { openHouse, saveHouse, withSettings } from "../store/house-store.js"
 import { loadKey, Vault } from "../vault/vault.js"
 
@@ -55,7 +64,9 @@ function fakePlanner(): Planner {
   return {
     async plan({ request }) {
       return {
+        type: "plan",
         end: "plan ready",
+        outcome: "read",
         steps: [{
           id: "s1",
           text: request,
@@ -71,6 +82,9 @@ function fakePlanner(): Planner {
     async review() {
       return { type: "approve" }
     },
+    async converse() {
+      return { type: "reply", text: "Still on the current mission." }
+    },
   }
 }
 
@@ -85,6 +99,9 @@ function missingKeyPlanner(): Planner {
     },
     async review() {
       return { type: "ask", question: MISSING_GROK_KEY_ASK, reason: "machine" }
+    },
+    async converse() {
+      return { type: "reply", text: MISSING_GROK_KEY_SHORT }
     },
   }
 }
@@ -130,6 +147,58 @@ function vaultState(): { type: "vault"; items: string[] } {
 }
 
 const workStatus = createStatusBoard()
+const trace = createTraceWriter(dataDir)
+let lastActivityMs = saved.runtime?.lastActivityMs ?? Date.now()
+
+const { store: conversation, abortedLeftover } = await openConversation(dataDir, {
+  mission: saved.mission,
+  lastActivityMs,
+})
+
+function touchActivity(): void {
+  lastActivityMs = Date.now()
+  loop.touchActivity(lastActivityMs)
+}
+
+function persist(): void {
+  const runtime = {
+    ...loop.runtimeState(),
+    lastActivityMs,
+  }
+  void saveHouse(dataDir, house, loop.mission, runtime)
+}
+
+if (abortedLeftover) {
+  void saveHouse(dataDir, house, abortedLeftover, {
+    driver: saved.runtime?.driver ?? "agent",
+    notes: saved.runtime?.notes ?? [],
+    recent: saved.runtime?.recent ?? [],
+    previousAction: saved.runtime?.previousAction ?? null,
+    previousUrl: saved.runtime?.previousUrl ?? "",
+    lastActivityMs,
+  })
+}
+
+function restoreSavedMission(savedMission: Mission | null): void {
+  if (!savedMission || !isLiveMission(savedMission)) return
+  let mission = savedMission
+  if (mission.lastCommit?.outcome === "started") {
+    mission = markCommitUnknown(mission)
+  }
+  if (mission.status === "running") {
+    mission = {
+      ...mission,
+      status: "waiting_on_user",
+      question: RESTART_QUESTION,
+      questionReason: "machine",
+    }
+  }
+  loop.restoreMission(mission, {
+    ...saved.runtime,
+    lastActivityMs,
+  })
+}
+
 const loop = new HouseLoop({
   planner: brain.planner,
   executor: brain.executor,
@@ -138,11 +207,37 @@ const loop = new HouseLoop({
   level: house.level,
   language: house.language,
   status: workStatus,
+  trace,
+  recentThread: () => conversation.recentThread(),
   emit(event: LoopEvent) {
+    touchActivity()
+    if (event.type === "message") {
+      void conversation.appendMessage(event.role, event.text, loop.mission?.id ?? null)
+    }
+    if (event.type === "question") {
+      void conversation.appendMessage("agent", event.question, loop.mission?.id ?? null)
+    }
+    if ((event.type === "plan" || event.type === "status") && loop.mission) {
+      void conversation.saveMission(loop.mission)
+    }
     broadcast(event)
-    void saveHouse(dataDir, house, loop.mission)
+    persist()
   },
 })
+
+const liveFromConversation = [...conversation.snapshot().missions].reverse().find((mission) => isLiveMission(mission))
+restoreSavedMission(liveFromConversation ?? null)
+loop.abortIfQuiet(Date.now())
+if (loop.mission && isLiveMission(loop.mission)) {
+  void conversation.saveMission(loop.mission)
+}
+if (
+  loop.mission &&
+  (loop.mission.status === "waiting_on_user" || loop.mission.status === "running") &&
+  graceOpen(Date.now(), lastActivityMs)
+) {
+  void loop.reconcileAfterRestart().then(() => persist())
+}
 
 const server = createServer(async (_request, response) => {
   const html = await readFile(pagePath)
@@ -154,10 +249,26 @@ const wss = new WebSocketServer({ server })
 wss.on("connection", (socket) => {
   sockets.add(socket)
   send(socket, { type: "labels", language: house.language, labels: labels[house.language] })
-  send(socket, { type: "settings", level: house.level, language: house.language })
+  send(socket, {
+    type: "settings",
+    level: house.level,
+    language: house.language,
+    workStatusPollMs: WORK_STATUS_POLL_MS,
+  })
   send(socket, readyState())
   send(socket, vaultState())
+  send(socket, {
+    type: "thread",
+    messages: conversation.snapshot().messages.map((message) => ({
+      role: message.role,
+      text: message.text,
+    })),
+  })
   if (loop.mission) send(socket, { type: "plan", mission: loop.mission })
+  else {
+    const lastMission = [...conversation.snapshot().missions].at(-1)
+    if (lastMission) send(socket, { type: "plan", mission: lastMission })
+  }
   socket.on("message", (raw) => {
     void onMessage(socket, String(raw))
   })
@@ -204,26 +315,26 @@ async function onMessage(socket: WebSocket, raw: string): Promise<void> {
     send(socket, { type: "vault_result", ok, message: ok ? "Removed." : "Not found." })
     return
   }
-  if (event.type === "mission" && event.text) {
+  if ((event.type === "mission" || event.type === "steer" || event.type === "answer") && event.text) {
     if (mode !== "fake" && !xaiKey) {
       send(socket, { type: "message", role: "agent", text: MISSING_GROK_KEY_SHORT })
       return
     }
+    touchActivity()
     loop.level = house.level
     loop.language = house.language
     await loop.acceptMission(event.text)
   }
-  if (event.type === "answer" && event.text) await loop.answer(event.text)
   if (event.type === "edit_end" && event.end) loop.editEnd(event.end)
   if (event.type === "level" && (event.level === 1 || event.level === 2)) {
     house = withSettings(house, event.level, house.language)
     loop.level = event.level
-    await saveHouse(dataDir, house, loop.mission)
+    persist()
   }
   if (event.type === "language" && (event.language === "en" || event.language === "he")) {
     house = withSettings(house, house.level, event.language)
     loop.language = event.language
-    await saveHouse(dataDir, house, loop.mission)
+    persist()
     broadcast({ type: "labels", language: event.language, labels: labels[event.language] })
   }
   if (event.type === "driver" && (event.text === "user" || event.text === "agent")) {
@@ -302,6 +413,35 @@ setInterval(() => {
     })
     .catch(() => undefined)
 }, SCREEN_INTERVAL_MS)
+
+setInterval(() => {
+  void loop.supervise().catch(() => undefined)
+}, SUPERVISE_POLL_MS)
+
+setInterval(() => {
+  if (loop.abortIfQuiet(Date.now())) {
+    persist()
+    return
+  }
+  if (graceOpen(Date.now(), lastActivityMs)) return
+  const status = loop.mission?.status
+  if (status === "running") return
+  void computer.close().catch(() => undefined)
+}, GRACE_POLL_MS)
+
+async function shutdown(): Promise<void> {
+  const runtime = { ...loop.runtimeState(), lastActivityMs }
+  await saveHouse(dataDir, house, loop.mission, runtime).catch(() => undefined)
+  await computer.close().catch(() => undefined)
+  server.close()
+}
+
+process.on("SIGINT", () => {
+  void shutdown().finally(() => process.exit(0))
+})
+process.on("SIGTERM", () => {
+  void shutdown().finally(() => process.exit(0))
+})
 
 server.listen(port, BIND_HOST, () => {
   const waiting = [

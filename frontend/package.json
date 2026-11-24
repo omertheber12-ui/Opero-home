@@ -1,0 +1,9 @@
+{
+  "name": "opero-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "test": "node -e \"process.exit(0)\""
+  }
+}

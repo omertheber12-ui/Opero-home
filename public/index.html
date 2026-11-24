@@ -33,13 +33,15 @@
       html, body { height: 100%; }
       body {
         margin: 0;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
         font: 15px/1.5 var(--font);
         color: var(--ink);
         background:
           radial-gradient(1200px 600px at 10% -10%, rgba(0, 201, 183, 0.14), transparent 55%),
           radial-gradient(900px 500px at 100% 0%, rgba(41, 55, 85, 0.9), transparent 50%),
           linear-gradient(165deg, var(--bg) 0%, var(--bg-deep) 100%);
-        min-height: 100vh;
       }
       body::before {
         content: "";
@@ -55,7 +57,9 @@
         z-index: 1;
         display: grid;
         grid-template-rows: auto 1fr;
-        min-height: 100vh;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
         max-width: 1440px;
         margin: 0 auto;
         padding: 18px 20px 24px;
@@ -189,6 +193,7 @@
         padding: 14px 16px;
         border-bottom: 1px solid var(--line);
         background: rgba(0, 0, 0, 0.18);
+        flex-shrink: 0;
       }
       .panel-head h2 {
         margin: 0;
@@ -206,13 +211,13 @@
         border: 1px solid rgba(0, 201, 183, 0.25);
       }
       #thread {
-        flex: 1;
-        overflow: auto;
+        flex: 1 1 0;
+        min-height: 0;
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
         gap: 10px;
         padding: 16px;
-        min-height: 220px;
       }
       .msg {
         max-width: 92%;
@@ -240,6 +245,7 @@
         padding: 12px 14px 14px;
         border-top: 1px solid var(--line);
         background: rgba(0, 0, 0, 0.16);
+        flex-shrink: 0;
       }
       form#composer { display: flex; gap: 10px; align-items: end; }
       textarea#mission {
@@ -252,6 +258,9 @@
         padding: 0 16px 16px;
         border-top: 1px solid var(--line);
         background: rgba(0, 0, 0, 0.1);
+        flex: 0 0 auto;
+        max-height: 40%;
+        overflow: auto;
       }
       .plan-block .plan-title {
         display: flex;
@@ -285,6 +294,8 @@
       .steps-empty { color: var(--muted); font-size: 0.88rem; padding: 4px 0 8px; }
       .screen-frame {
         position: relative;
+        flex: 1;
+        min-height: 0;
         margin: 16px;
         border-radius: 14px;
         overflow: hidden;
@@ -292,7 +303,6 @@
         background:
           linear-gradient(180deg, rgba(0, 201, 183, 0.05), transparent 40%),
           #070b14;
-        aspect-ratio: 1280 / 800; /* VIEWPORT_WIDTH / VIEWPORT_HEIGHT */
         box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
       }
       #screen {
@@ -335,12 +345,14 @@
         display: flex;
         gap: 10px;
         padding: 0 16px 16px;
+        flex-shrink: 0;
       }
       .screen-actions button { flex: 1; }
       .hint {
         padding: 0 16px 16px;
         color: var(--muted);
         font-size: 0.82rem;
+        flex-shrink: 0;
       }
       .overlay {
         position: fixed;
@@ -407,7 +419,10 @@
         to { opacity: 1; transform: none; }
       }
       @media (max-width: 960px) {
-        main.desk { grid-template-columns: 1fr; }
+        main.desk {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+        }
         .shell { padding: 12px; }
       }
       html[dir="rtl"] .msg.user { align-self: flex-start; }
@@ -529,7 +544,9 @@
       const readyBadge = document.querySelector("#ready-badge")
       const driverHint = document.querySelector("#driver-hint")
 
-      let waiting = false
+      let missionLive = false
+      let workStatusPollMs = 1000
+      let workStatusTimer = null
       let ready = false
       let driver = "agent"
       let labels = {}
@@ -560,6 +577,7 @@
         if (message.type === "settings") {
           document.querySelector("#level").value = String(message.level)
           document.querySelector("#language").value = message.language
+          if (message.workStatusPollMs) workStatusPollMs = message.workStatusPollMs
         }
         if (message.type === "ready") {
           ready = message.ready
@@ -573,21 +591,21 @@
           keyMsg.textContent = message.message || ""
           document.querySelector("#key-save").disabled = message.ok === null
         }
+        if (message.type === "thread" && Array.isArray(message.messages)) {
+          thread.replaceChildren()
+          for (const line of message.messages) add(line.role, line.text)
+        }
         if (message.type === "message") {
           clearThinking()
           add(message.role, message.text)
         }
         if (message.type === "thinking") showThinking(message.text)
         if (message.type === "question") {
-          waiting = true
           clearThinking()
           add("agent", message.question)
           setMissionStatus("waiting_on_user")
         }
-        if (message.type === "status") {
-          if (message.status !== "waiting_on_user") waiting = false
-          setMissionStatus(message.status)
-        }
+        if (message.type === "status") setMissionStatus(message.status)
         if (message.type === "plan") showPlan(message.mission)
         if (message.type === "screen") {
           hasScreen = true
@@ -624,7 +642,7 @@
           keyOverlay.classList.remove("hidden")
           return
         }
-        send({ type: waiting ? "answer" : "mission", text })
+        send({ type: "mission", text })
         mission.value = ""
       })
       end.addEventListener("change", () => send({ type: "edit_end", end: end.value }))
@@ -760,6 +778,7 @@
       }
 
       function setMissionStatus(status) {
+        missionLive = status === "planning" || status === "running" || status === "waiting_on_user"
         missionPill.classList.remove("live", "waiting", "done")
         const map = {
           planning: labels.waiting || "Waiting",
@@ -767,11 +786,21 @@
           waiting_on_user: labels.waiting || "Waiting",
           done: labels.done || "Done",
           blocked: labels.blocked || "Blocked",
+          aborted: labels.aborted || "Aborted",
         }
         missionText.textContent = map[status] || status || "—"
-        if (status === "running") missionPill.classList.add("live")
+        if (status === "running") {
+          missionPill.classList.add("live")
+          send({ type: "work_status" })
+          if (!workStatusTimer) {
+            workStatusTimer = setInterval(() => send({ type: "work_status" }), workStatusPollMs)
+          }
+        } else if (workStatusTimer) {
+          clearInterval(workStatusTimer)
+          workStatusTimer = null
+        }
         if (status === "waiting_on_user" || status === "planning") missionPill.classList.add("waiting")
-        if (status === "done") missionPill.classList.add("done")
+        if (status === "done" || status === "aborted") missionPill.classList.add("done")
       }
 
       function updateDriverUi() {
