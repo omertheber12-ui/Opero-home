@@ -500,6 +500,53 @@
       .log li:last-child { border-block-end: 0; }
       .log time { width: 52px; flex-shrink: 0; font-size: 14px; color: var(--text-3); font-variant-numeric: tabular-nums; }
 
+      /* Insurance */
+      .banner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        padding: 10px 16px;
+        border-radius: 14px;
+        background: var(--amber-tint);
+        color: var(--amber-text);
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .summary .sentence {
+        margin: 0;
+        max-width: 720px;
+        font-size: 26px;
+        line-height: 1.35;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-wrap: pretty;
+      }
+      .summary .sentence.quiet { font-size: 19px; font-weight: 500; color: #dfe5ef; }
+      .ok-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+        gap: 16px;
+      }
+      .ok-card .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+      .ok-card .saving { font-size: 15px; font-weight: 700; white-space: nowrap; }
+      .ok-card .approved { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--navy); }
+      .ok-card .answer { padding: 12px 16px; border-radius: 18px 18px 18px 6px; background: var(--surface-2); color: var(--navy); }
+      .table-card { overflow-x: auto; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); }
+      .table-card table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 15px; }
+      .table-card th {
+        padding: 14px 24px;
+        border-block-end: 1px solid var(--surface-2);
+        color: var(--text-3);
+        font-size: 13px;
+        font-weight: 600;
+        text-align: start;
+      }
+      .table-card td { padding: 14px 24px; border-block-end: 1px solid var(--surface-2); }
+      .table-card tr:last-child td { border-block-end: 0; }
+      .table-card td:first-child { font-weight: 600; }
+      .table-card .empty-row td { font-weight: 400; color: var(--text-2); }
+
       /* Agent panel */
       .agent-panel {
         flex: 0 0 380px;
@@ -982,13 +1029,17 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: scaleX(var(--flip, 1))"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
               </div>
             </a>
-            <div class="agent-card">
+            <a class="agent-card active" href="#insurance" id="insurance-card">
               <div class="card-top">
                 <div class="tile"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></div>
-                <span class="tag" data-l="comingSoon">Coming soon</span>
+                <span class="status-line"><span class="dot" style="background: var(--teal)"></span><span data-l="active">Active</span></span>
               </div>
               <div class="card-body"><h2 data-l="insurance">Insurance</h2><p data-l="insuranceBody"></p></div>
-            </div>
+              <div class="card-foot">
+                <span id="insurance-card-foot">Open</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: scaleX(var(--flip, 1))"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+              </div>
+            </a>
             <div class="agent-card">
               <div class="card-top">
                 <div class="tile"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6"/><path d="M9 12h6"/></svg></div>
@@ -1017,14 +1068,61 @@
       <div class="workspace" id="view-house">
         <nav class="agent-nav" data-l-aria="agents" aria-label="Opero Home agents">
           <p class="eyebrow" data-l="homeEyebrow">Opero Home</p>
-          <a href="#house" aria-current="page"><span data-l="agentName">House agent</span><span class="dot pulse"></span></a>
-          <span><span data-l="insurance">Insurance</span><span class="tag" data-l="soon">Soon</span></span>
+          <a href="#house" id="nav-house" aria-current="page"><span data-l="agentName">House agent</span><span class="dot pulse"></span></a>
+          <a href="#insurance" id="nav-insurance"><span data-l="insurance">Insurance</span><span class="dot"></span></a>
           <span><span data-l="bills">Bills</span><span class="tag" data-l="soon">Soon</span></span>
           <span><span data-l="groceries">Groceries</span><span class="tag" data-l="soon">Soon</span></span>
           <span><span data-l="food">Food planning</span><span class="tag" data-l="soon">Soon</span></span>
         </nav>
 
-        <section class="results" aria-labelledby="agent-title">
+        <section class="results" id="results-insurance" aria-labelledby="ins-title" hidden>
+          <div class="title-row">
+            <h1 id="ins-title" data-l="insurance">Insurance</h1>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+              <span class="pill"><span class="dot" id="ins-checked-dot"></span><span id="ins-checked">Not checked yet</span></span>
+              <button class="btn primary" id="ins-run" type="button" data-l="insuranceRun">Check my insurance</button>
+            </div>
+          </div>
+          <p class="banner" id="ins-demo" hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+            <span data-l="insuranceDemo">Sample data from the design. These are not your policies.</span>
+          </p>
+
+          <section class="summary" aria-labelledby="ins-summary-label">
+            <h2 class="eyebrow" id="ins-summary-label" data-l="shortVersion">The short version</h2>
+            <p class="sentence" id="ins-sentence"></p>
+            <div class="figures">
+              <div><span data-l="payNow">You pay now</span><span id="ins-now">—</span></div>
+              <div><span data-l="afterChanges">After changes</span><span id="ins-after" class="positive">—</span></div>
+            </div>
+          </section>
+
+          <section class="section" aria-labelledby="ins-ok-heading">
+            <h2 id="ins-ok-heading" data-l="needsOk">Needs your OK</h2>
+            <div class="ok-grid" id="ins-approvals"></div>
+          </section>
+
+          <section class="section" aria-labelledby="ins-pol-heading">
+            <h2 id="ins-pol-heading" data-l="policies">Your policies</h2>
+            <div class="table-card">
+              <table>
+                <thead>
+                  <tr><th scope="col" data-l="colPolicy">Policy</th><th scope="col" data-l="colPay">You pay</th><th scope="col" data-l="colStatus">Status</th></tr>
+                </thead>
+                <tbody id="ins-items"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="section" aria-labelledby="ins-did-heading">
+            <h2 id="ins-did-heading" data-l="did">What Opero did</h2>
+            <div class="card" style="padding: 0">
+              <ol class="log" id="ins-log"></ol>
+            </div>
+          </section>
+        </section>
+
+        <section class="results" id="results-house" aria-labelledby="agent-title">
           <div class="title-row">
             <h1 id="agent-title" data-l="agentName">House agent</h1>
             <div class="pill" id="mission-pill"><span class="dot"></span><span id="mission-text">—</span></div>
@@ -1064,7 +1162,7 @@
             <div class="who">
               <svg viewBox="0 0 100 100" width="44" height="44" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="#000"/><circle cx="38" cy="50" r="8" fill="#09C8B8"/><circle cx="62" cy="50" r="8" fill="#09C8B8"/></svg>
               <div class="who-text">
-                <strong id="panel-name" data-l="agentName">House agent</strong>
+                <strong id="panel-name">House agent</strong>
                 <span id="panel-status">Waiting for a mission</span>
               </div>
             </div>
@@ -1123,7 +1221,7 @@
             <svg viewBox="0 0 100 100" width="42" height="42" aria-hidden="true"><rect width="100" height="100" rx="46" fill="#293754"/><rect x="22.8" y="17.4" width="54.8" height="64.6" rx="27" fill="#fff"/><circle cx="50" cy="50.5" r="24.6" fill="#000"/><circle cx="42" cy="50" r="4.9" fill="#09C8B8"/><circle cx="57.6" cy="49.6" r="4.9" fill="#09C8B8"/></svg>
             <span class="dot pulse"></span>
           </span>
-          <span class="who-text"><strong data-l="agentName">House agent</strong><span id="dock-status">Waiting for a mission</span></span>
+          <span class="who-text"><strong id="dock-name">House agent</strong><span id="dock-status">Waiting for a mission</span></span>
         </button>
         <span class="dock-divider" aria-hidden="true"></span>
         <button class="dock-watch" id="dock-watch" type="button" data-l-aria="watch" aria-label="Watch the computer">
@@ -1237,6 +1335,7 @@
       let language = "en"
       let hasScreen = false
       let vaultItems = []
+      let insurance = null
       let plan = null
       let pending = null
       let work = null
@@ -1511,16 +1610,23 @@
       }
 
       // Views: #intro, #home, and the house agent (default)
+      let currentView = "house"
       function route() {
         const hash = location.hash
-        const view = hash === "#intro" ? "intro" : hash === "#home" ? "home" : "house"
+        const view = hash === "#intro" ? "intro" : hash === "#home" ? "home" : hash === "#insurance" ? "insurance" : "house"
+        currentView = view
+        const workspace = view === "house" || view === "insurance"
         $("#view-intro").hidden = view !== "intro"
         $("#app").hidden = view === "intro"
         $("#view-home").hidden = view !== "home"
-        $("#view-house").hidden = view !== "house"
+        $("#view-house").hidden = !workspace
+        $("#results-house").hidden = view !== "house"
+        $("#results-insurance").hidden = view !== "insurance"
         $("#switcher").hidden = view !== "home"
-        $("#crumb").hidden = view !== "house"
-        dock.hidden = view !== "house" || !panel.hidden
+        $("#crumb").hidden = !workspace
+        dock.hidden = !workspace || !panel.hidden
+        updateAgentContext()
+        if (view === "insurance") renderInsurance()
         if (view === "intro") startIntro()
         else stopIntro()
         if (view === "home") renderHome()
@@ -1581,7 +1687,199 @@
         const hour = new Date().getHours()
         $("#greeting").textContent = hour < 12 ? labels.greetMorning : hour < 18 ? labels.greetAfternoon : labels.greetEvening
         $("#house-card-foot").textContent = pending ? labels.oneNeedsOk : (missionLive ? statusWord(missionStatus) : labels.openAgent)
+        const open = insurance.approvals.filter((item) => item.status === "pending").length
+        $("#insurance-card-foot").textContent = open > 0
+          ? labels.needsOkCount.replace("{n}", String(open))
+          : insurance.checkedAt ? labels.insuranceAllGood : labels.notChecked
       }
+
+      function updateAgentContext() {
+        const isInsurance = currentView === "insurance"
+        $("#subtitle").textContent = isInsurance ? labels.insurance : labels.subtitle
+        const name = isInsurance ? labels.insuranceAgent : labels.agentName
+        $("#panel-name").textContent = name
+        $("#dock-name").textContent = name
+        $("#nav-house").toggleAttribute("aria-current", !isInsurance)
+        if (!isInsurance) $("#nav-house").setAttribute("aria-current", "page")
+        $("#nav-insurance").toggleAttribute("aria-current", isInsurance)
+        if (isInsurance) $("#nav-insurance").setAttribute("aria-current", "page")
+        $("#nav-house .dot").classList.toggle("pulse", missionLive)
+      }
+
+      // Insurance agent. The house has no insurance messages yet
+      // (docs/superpowers/specs/2026-11-25-insurance-agent-design.md), so the screen
+      // shows an empty state, or the design's sample data with ?demo=insurance.
+      const demoInsurance = params.get("demo") === "insurance"
+      insurance = demoInsurance ? sampleInsurance() : { checkedAt: null, summary: null, approvals: [], items: [], log: [] }
+
+      function sampleInsurance() {
+        return {
+          checkedAt: "09:40",
+          summary: { now: 785, after: 475 },
+          approvals: [
+            { id: "health", title: "demoApprove1Title", reason: "demoApprove1Reason", saving: "−₪142", per: "month", secondary: "askQuestion", answer: "demoApprove1Answer", done: "demoApprove1Done", status: "pending" },
+            { id: "car", title: "demoApprove2Title", reason: "demoApprove2Reason", saving: "−₪2,020", per: "year", secondary: "seeQuotes", answer: "demoApprove2Answer", done: "demoApprove2Done", status: "pending" },
+          ],
+          items: [
+            { name: "demoPolCar", amount: 4860, per: "year", status: "renews", date: "demoDec12" },
+            { name: "demoPolHealthOwn", amount: 142, per: "month", status: "duplicate" },
+            { name: "demoPolHealthWork", text: "paidByEmployer", status: "good" },
+            { name: "demoPolHome", amount: 96, per: "month", status: "good" },
+            { name: "demoPolLife", amount: 78, per: "month", status: "good" },
+            { name: "demoPolCare", amount: 64, per: "month", status: "good" },
+            { name: "demoPolTravel", text: "perTrip", status: "good" },
+          ],
+          log: [
+            { time: "09:12", text: "demoLog1" },
+            { time: "09:14", text: "demoLog2" },
+            { time: "09:18", text: "demoLog3" },
+            { time: "09:26", text: "demoLog4" },
+            { time: "09:40", text: "demoLog5" },
+          ],
+        }
+      }
+
+      function money(amount, per) {
+        const value = "₪" + amount.toLocaleString("en-US")
+        return per ? value + " " + (per === "year" ? labels.perYear : labels.perMonth) : value
+      }
+
+      function word(key) {
+        return labels[key] || key
+      }
+
+      function renderInsurance() {
+        $("#ins-demo").hidden = !demoInsurance
+        $("#ins-checked").textContent = insurance.checkedAt
+          ? labels.checkedToday.replace("{time}", insurance.checkedAt)
+          : labels.notChecked
+        $("#ins-checked-dot").style.background = insurance.checkedAt ? "var(--teal)" : ""
+
+        const sentence = $("#ins-sentence")
+        sentence.classList.toggle("quiet", !insurance.summary)
+        sentence.textContent = insurance.summary ? labels.demoSentence : labels.insuranceEmpty
+        $("#ins-now").textContent = insurance.summary ? money(insurance.summary.now, "month") : "—"
+        $("#ins-after").textContent = insurance.summary ? money(insurance.summary.after, "month") : "—"
+
+        const approvals = $("#ins-approvals")
+        approvals.replaceChildren()
+        if (insurance.approvals.length === 0) {
+          const empty = document.createElement("p")
+          empty.className = "card muted"
+          empty.textContent = labels.insuranceNoApprovals
+          approvals.append(empty)
+        }
+        for (const item of insurance.approvals) approvals.append(approvalCard(item))
+
+        const body = $("#ins-items")
+        body.replaceChildren()
+        if (insurance.items.length === 0) {
+          const row = document.createElement("tr")
+          row.className = "empty-row"
+          const cell = document.createElement("td")
+          cell.colSpan = 3
+          cell.textContent = labels.insuranceNoPolicies
+          row.append(cell)
+          body.append(row)
+        }
+        for (const item of insurance.items) {
+          const row = document.createElement("tr")
+          const name = document.createElement("td")
+          name.textContent = word(item.name)
+          const price = document.createElement("td")
+          price.textContent = item.text ? word(item.text) : money(item.amount, item.per)
+          const state = document.createElement("td")
+          const chip = document.createElement("span")
+          chip.className = "chip " + (item.status === "good" ? "good" : "warn")
+          chip.textContent = item.status === "renews"
+            ? labels.chipRenews.replace("{date}", word(item.date))
+            : item.status === "duplicate" ? labels.chipDuplicate : labels.chipGood
+          state.append(chip)
+          row.append(name, price, state)
+          body.append(row)
+        }
+
+        const log = $("#ins-log")
+        log.replaceChildren()
+        if (insurance.log.length === 0) {
+          const empty = document.createElement("li")
+          empty.className = "muted"
+          empty.textContent = labels.didEmpty
+          log.append(empty)
+        }
+        for (const item of insurance.log) {
+          const row = document.createElement("li")
+          const time = document.createElement("time")
+          time.textContent = item.time
+          const text = document.createElement("span")
+          text.textContent = word(item.text)
+          row.append(time, text)
+          log.append(row)
+        }
+      }
+
+      function approvalCard(item) {
+        const card = document.createElement("article")
+        card.className = "card ok-card"
+        const head = document.createElement("div")
+        head.className = "head"
+        const title = document.createElement("h3")
+        title.textContent = word(item.title)
+        const saving = document.createElement("span")
+        saving.className = "saving"
+        saving.textContent = item.saving + (item.per === "year" ? labels.perYearShort : labels.perMonthShort)
+        head.append(title, saving)
+        const reason = document.createElement("p")
+        reason.textContent = word(item.reason)
+        card.append(head, reason)
+        if (item.status === "approved") {
+          const done = document.createElement("p")
+          done.className = "approved"
+          done.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A8F84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>'
+          done.append(word(item.done))
+          card.append(done)
+        } else {
+          const row = document.createElement("div")
+          row.className = "row"
+          const approve = document.createElement("button")
+          approve.type = "button"
+          approve.className = "btn primary"
+          approve.textContent = labels.approve
+          approve.addEventListener("click", () => {
+            // Sample data only: approving changes this screen and nothing else.
+            item.status = "approved"
+            renderInsurance()
+          })
+          const secondary = document.createElement("button")
+          secondary.type = "button"
+          secondary.className = "btn"
+          secondary.textContent = word(item.secondary)
+          secondary.addEventListener("click", () => {
+            item.showAnswer = true
+            renderInsurance()
+          })
+          row.append(approve, secondary)
+          card.append(row)
+        }
+        if (item.showAnswer) {
+          const answer = document.createElement("p")
+          answer.className = "answer"
+          answer.textContent = word(item.answer)
+          card.append(answer)
+        }
+        return card
+      }
+
+      $("#ins-run").addEventListener("click", () => {
+        if (!ready) {
+          keyOverlay.classList.remove("hidden")
+          keyOverlay.setAttribute("aria-hidden", "false")
+          return
+        }
+        const text = labels.insuranceMission
+        send({ type: "mission", text })
+        if (panel.hidden) setPanel(true)
+      })
 
       function mapPictureClick(clientX, clientY) {
         const box = screen.getBoundingClientRect()
@@ -1914,7 +2212,11 @@
         renderSteps()
         renderPending()
         renderActions()
-        renderHome()
+        if (insurance) {
+          renderHome()
+          renderInsurance()
+          updateAgentContext()
+        }
       }
 
       updateDriverUi()
