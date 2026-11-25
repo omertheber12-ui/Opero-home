@@ -188,6 +188,7 @@ export const labels = {
     demoStep2: "Checking coverage matches yours",
     demoStep3: "Re-check Insurers B and C",
     demoStep4: "Update your summary",
+    tapForSound: "Tap anywhere for sound",
   },
   he: {
     title: "Opero",
@@ -378,6 +379,7 @@ export const labels = {
     demoStep2: "בודק שהכיסוי תואם לשלכם",
     demoStep3: "לבדוק שוב את חברות ב ו-ג",
     demoStep4: "לעדכן את הסיכום שלכם",
+    tapForSound: "הקישו בכל מקום להפעלת הקול",
   },
 }
 

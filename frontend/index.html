@@ -137,6 +137,17 @@
         border-color: rgba(41, 55, 84, 0.2);
         font-size: 14px;
       }
+      .sound-hint {
+        position: absolute;
+        inset-block-start: 24px;
+        inset-inline-start: 24px;
+        background: var(--navy);
+        border-color: transparent;
+        color: #fff;
+        font-size: 14px;
+        animation: op-in 0.4s ease both;
+      }
+      .sound-hint:hover { background: var(--navy-hover); }
       .intro-end {
         position: absolute;
         inset-inline: 0;
@@ -1047,7 +1058,11 @@
   </head>
   <body>
     <section class="intro" id="view-intro" hidden aria-label="Opero intro">
-      <video id="intro-video" src="./assets/opero-intro.mp4" muted playsinline preload="auto"></video>
+      <video id="intro-video" src="./assets/opero-intro.mp4" playsinline preload="auto"></video>
+      <button class="btn sound-hint" id="intro-sound-hint" type="button" hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>
+        <span data-l="tapForSound">Tap for sound</span>
+      </button>
       <div class="intro-controls">
         <button class="btn round" id="intro-sound" type="button" aria-label="Turn sound on">
           <svg id="icon-muted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>
@@ -1808,10 +1823,35 @@
         $("#intro-play").hidden = true
         introVideo.currentTime = 0
         if (reducedMotion) return introEnded(true)
-        const playing = introVideo.play()
-        if (playing && playing.catch) playing.catch(() => introEnded(true))
+        // Try to start with sound. Browsers allow that only after the person has
+        // interacted with the site, so if it is refused, play muted and turn the
+        // sound on (from the start) at the first tap, click or key press.
+        introVideo.muted = false
+        updateSoundButton()
+        introVideo.play().catch(() => {
+          introVideo.muted = true
+          updateSoundButton()
+          $("#intro-sound-hint").hidden = false
+          document.addEventListener("pointerdown", unmuteIntro, { once: true, capture: true })
+          document.addEventListener("keydown", unmuteIntro, { once: true, capture: true })
+          introVideo.play().catch(() => introEnded(true))
+        })
+      }
+      function unmuteIntro(event) {
+        document.removeEventListener("pointerdown", unmuteIntro, { capture: true })
+        document.removeEventListener("keydown", unmuteIntro, { capture: true })
+        $("#intro-sound-hint").hidden = true
+        if ($("#view-intro").hidden || !introVideo.muted) return
+        // Skip and Enter keep working; any other tap restarts the intro with sound.
+        if (event.target.closest && event.target.closest("#intro-skip, #intro-enter, #intro-sound")) return
+        introVideo.muted = false
+        introVideo.currentTime = 0
+        $("#intro-end").hidden = true
+        introVideo.play().catch(() => introEnded(true))
+        updateSoundButton()
       }
       function stopIntro() {
+        $("#intro-sound-hint").hidden = true
         if (!introVideo.paused) introVideo.pause()
       }
       function introEnded(showPlay) {
