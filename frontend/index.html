@@ -3,212 +3,631 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Opero House</title>
+    <title>Opero Home</title>
+    <link rel="icon" href="./assets/opero-mark.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@700;800&display=swap" rel="stylesheet" />
     <style>
       :root {
-        color-scheme: dark;
-        --bg: #121a2b;
-        --bg-deep: #0c1220;
-        --panel: rgba(30, 42, 66, 0.72);
-        --panel-solid: #1e2a42;
-        --navy: #293755;
-        --ink: #e8eef8;
-        --muted: #8b9bb8;
-        --line: rgba(255, 255, 255, 0.08);
-        --accent: #00c9b7;
-        --accent-dim: rgba(0, 201, 183, 0.16);
-        --accent-glow: rgba(0, 201, 183, 0.35);
-        --warn: #fab005;
-        --danger: #fa5252;
-        --ok: #25d366;
-        --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-        --radius: 18px;
-        --font: "Figtree", system-ui, sans-serif;
-        --display: "Syne", "Figtree", sans-serif;
+        color-scheme: light;
+        --navy: #293754;
+        --navy-hover: #1a2440;
+        --teal: #09c8b8;
+        --teal-light: #5ce1d4;
+        --teal-tint: #eaf9f7;
+        --teal-dark: #0b6b63;
+        --teal-check: #0a8f84;
+        --amber-tint: #fff1de;
+        --amber-text: #8a4b00;
+        --red-tint: #fdecec;
+        --red-text: #a02424;
+        --bg: #f5f7fa;
+        --surface: #ffffff;
+        --surface-2: #eef1f5;
+        --border: #e3e7ee;
+        --border-strong: #d5dbe4;
+        --text-2: #4a5672;
+        --text-3: #5e6a82;
+        --dark-stage: #0b111d;
+        --dark-text-2: #aab4c8;
+        --font: Inter, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+        --display: "Inter Tight", Inter, Helvetica, Arial, sans-serif;
       }
       * { box-sizing: border-box; }
+      [hidden] { display: none !important; }
       html, body { height: 100%; }
       body {
         margin: 0;
-        height: 100%;
-        min-height: 0;
         overflow: hidden;
+        background: var(--bg);
+        color: var(--navy);
         font: 15px/1.5 var(--font);
-        color: var(--ink);
-        background:
-          radial-gradient(1200px 600px at 10% -10%, rgba(0, 201, 183, 0.14), transparent 55%),
-          radial-gradient(900px 500px at 100% 0%, rgba(41, 55, 85, 0.9), transparent 50%),
-          linear-gradient(165deg, var(--bg) 0%, var(--bg-deep) 100%);
       }
-      body::before {
-        content: "";
+      a { color: var(--navy); }
+      a:hover { color: var(--navy-hover); }
+      button, input, select, textarea { font: inherit; color: inherit; }
+      button { cursor: pointer; }
+      button:disabled { opacity: 0.45; cursor: not-allowed; }
+      :focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .eyebrow {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+      .tag {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+      .dot {
+        display: inline-block;
+        flex-shrink: 0;
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--border-strong);
+      }
+      .pulse { animation: op-dot 1.6s ease-in-out infinite; }
+      @keyframes op-dot { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+      @keyframes op-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 0 20px;
+        border-radius: 999px;
+        border: 1px solid var(--border-strong);
+        background: var(--surface);
+        color: var(--navy);
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .btn:hover { background: var(--surface-2); }
+      .btn.primary { border-color: transparent; background: var(--navy); color: #fff; }
+      .btn.primary:hover { background: var(--navy-hover); color: #fff; }
+      .btn.round { width: 44px; padding: 0; flex-shrink: 0; }
+      .btn.round svg { flex-shrink: 0; }
+
+      /* Intro */
+      .intro {
         position: fixed;
         inset: 0;
-        pointer-events: none;
-        opacity: 0.04;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-        z-index: 0;
-      }
-      .shell {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-rows: auto 1fr;
-        height: 100%;
-        min-height: 0;
+        z-index: 60;
+        background: #fff;
         overflow: hidden;
-        max-width: 1440px;
-        margin: 0 auto;
-        padding: 18px 20px 24px;
-        gap: 16px;
       }
-      header.app-bar {
+      .intro video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #fff;
+      }
+      .intro-controls {
+        position: absolute;
+        inset-block-start: 24px;
+        inset-inline-end: 24px;
         display: flex;
-        justify-content: space-between;
+        gap: 8px;
+      }
+      .intro-controls .btn {
+        background: rgba(255, 255, 255, 0.85);
+        border-color: rgba(41, 55, 84, 0.2);
+        font-size: 14px;
+      }
+      .intro-end {
+        position: absolute;
+        inset-inline: 0;
+        inset-block-end: 12%;
+        display: flex;
+        flex-direction: column;
         align-items: center;
         gap: 16px;
-        padding: 14px 18px;
-        border: 1px solid var(--line);
-        border-radius: calc(var(--radius) + 4px);
-        background: linear-gradient(135deg, rgba(30, 42, 66, 0.9), rgba(18, 26, 43, 0.75));
-        backdrop-filter: blur(16px);
-        box-shadow: var(--shadow);
-        animation: rise 0.55s ease both;
+        padding: 0 16px;
+        animation: op-in 0.6s ease both;
       }
-      .brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-      .brand h1 {
-        margin: 0;
+      .intro-end p { margin: 0; font-size: 18px; color: var(--text-2); text-align: center; }
+      .intro-end .btn.primary { min-height: 52px; padding: 0 28px; font-size: 16px; }
+
+      /* App frame */
+      .app {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        height: 100%;
+        min-height: 0;
+      }
+      header.topbar {
+        position: relative;
+        z-index: 15;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px 20px;
+        padding: 12px 28px;
+        border-block-end: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .top-start { display: flex; align-items: center; gap: 20px; min-width: 0; }
+      .wordmark { margin: 0; line-height: 1; }
+      .wordmark a {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        color: var(--navy);
+        text-decoration: none;
+      }
+      .wordmark .pero {
         font-family: var(--display);
         font-weight: 800;
-        font-size: 1.55rem;
-        letter-spacing: -0.03em;
+        font-size: 26px;
+        letter-spacing: -0.02em;
+        line-height: 1;
       }
-      .brand .subtitle {
-        color: var(--accent);
+      .crumb { margin: 0; font-size: 14px; color: var(--text-3); }
+      .crumb a { color: var(--text-3); text-decoration: none; }
+      .crumb a:hover { color: var(--navy); text-decoration: underline; }
+      .crumb strong { color: var(--navy); font-weight: 600; }
+      .switcher {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 4px;
+        border-radius: 999px;
+        background: var(--surface-2);
+      }
+      .switcher > * {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-3);
+        text-decoration: none;
+      }
+      .switcher [aria-current="page"] {
+        background: var(--surface);
+        box-shadow: 0 1px 2px rgba(41, 55, 84, 0.12);
+        color: var(--navy);
         font-weight: 600;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
       }
-      .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
-      .status-pill {
+      .top-end { position: relative; display: flex; align-items: center; gap: 10px; }
+      .pill {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        border: 1px solid var(--line);
-        background: rgba(0, 0, 0, 0.22);
-        font-size: 0.8rem;
-        color: var(--muted);
-        align-self: center;
+        height: 32px;
+        padding: 0 14px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font-size: 13px;
+        color: var(--text-2);
+        white-space: nowrap;
       }
-      .status-pill .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--danger);
-        box-shadow: 0 0 0 3px rgba(250, 82, 82, 0.2);
+      .pill.live .dot { background: var(--teal); }
+      .pill.waiting .dot { background: #f0a020; }
+      .pill.done .dot { background: var(--navy); }
+      .pill.blocked .dot { background: #d64545; }
+      #conn-pill .dot { background: #d64545; }
+      #conn-pill.live .dot { background: var(--teal); }
+      .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 22px;
+        border: 0;
+        background: var(--navy);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .status-pill.live .dot {
-        background: var(--ok);
-        box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.2);
+      .avatar:hover { background: var(--navy-hover); }
+      .popover {
+        position: absolute;
+        inset-block-start: calc(100% + 10px);
+        inset-inline-end: 0;
+        width: 280px;
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: 0 12px 32px rgba(41, 55, 84, 0.18);
       }
-      .status-pill.waiting .dot {
-        background: var(--warn);
-        box-shadow: 0 0 0 3px rgba(250, 176, 5, 0.2);
-      }
-      .status-pill.done .dot {
-        background: var(--accent);
-        box-shadow: 0 0 0 3px var(--accent-dim);
-      }
-      .overlay[aria-hidden="true"] { display: none; }
       label.field {
         display: grid;
-        gap: 4px;
-        font-size: 0.72rem;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
-      select, input, button, textarea {
-        font: inherit;
-        color: var(--ink);
-        background: rgba(12, 18, 32, 0.85);
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 10px 12px;
-        outline: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-      }
-      select:focus, input:focus, textarea:focus {
-        border-color: rgba(0, 201, 183, 0.55);
-        box-shadow: 0 0 0 3px var(--accent-dim);
-      }
-      button {
-        cursor: pointer;
+        gap: 6px;
+        font-size: 12px;
         font-weight: 600;
-        border-color: transparent;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-3);
       }
-      button.primary {
-        background: linear-gradient(135deg, #00d8c4, #00a896);
-        color: #04141a;
-        box-shadow: 0 8px 24px var(--accent-glow);
+      select, input:not([type]), input[type="password"], input[type="text"], textarea {
+        width: 100%;
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 22px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        color: var(--navy);
+        font-size: 15px;
+        letter-spacing: normal;
+        text-transform: none;
+        font-weight: 400;
       }
-      button.primary:hover { filter: brightness(1.06); }
-      button.ghost {
-        background: transparent;
-        border-color: var(--line);
-        color: var(--ink);
+      select:focus, input:focus, textarea:focus { outline: 2px solid var(--navy); outline-offset: 1px; }
+
+      /* Home */
+      .home { overflow-y: auto; min-height: 0; }
+      .home-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 64px 32px 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
       }
-      button.ghost:hover { border-color: rgba(0, 201, 183, 0.4); background: var(--accent-dim); }
-      button:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
-      main.desk {
+      .home-hero { display: flex; flex-direction: column; gap: 12px; }
+      .home-hero h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: clamp(36px, 6vw, 52px);
+        line-height: 1.05;
+        letter-spacing: -0.025em;
+        text-wrap: balance;
+      }
+      .home-hero p.sub { margin: 0; max-width: 560px; font-size: 19px; line-height: 1.5; color: var(--text-2); }
+      .agent-grid {
         display: grid;
-        grid-template-columns: minmax(320px, 1.05fr) minmax(340px, 0.95fr);
-        gap: 16px;
-        min-height: 0;
+        grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+        gap: 20px;
       }
-      .panel {
+      .agent-card {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-height: 260px;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1.5px dashed var(--border-strong);
+        color: var(--text-3);
+      }
+      .agent-card.active {
+        border: 1.5px solid var(--border);
+        background: var(--surface);
+        color: var(--navy);
+        text-decoration: none;
+        transition: box-shadow 0.2s, border-color 0.2s;
+      }
+      .agent-card.active:hover { border-color: var(--navy); box-shadow: 0 8px 24px rgba(41, 55, 84, 0.1); }
+      .card-top { display: flex; align-items: center; justify-content: space-between; }
+      .tile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: var(--surface-2);
+      }
+      .agent-card.active .tile { background: var(--teal-tint); }
+      .agent-card h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--navy); }
+      .agent-card p { margin: 0; font-size: 15px; line-height: 1.5; }
+      .agent-card.active p { color: var(--text-2); }
+      .card-body { display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
+      .card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-block-start: 16px;
+        border-block-start: 1px solid var(--surface-2);
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .status-line { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+
+      /* Workspace */
+      .workspace {
+        display: flex;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .agent-nav {
+        flex: 0 0 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 24px 16px;
+        border-inline-end: 1px solid var(--border);
+        background: var(--surface);
+        overflow-y: auto;
+      }
+      .agent-nav .eyebrow { margin: 0 12px 8px; }
+      .agent-nav > a, .agent-nav > span {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 44px;
+        padding: 0 12px;
+        border-radius: 12px;
+        font-size: 15px;
+        color: var(--text-3);
+        text-decoration: none;
+      }
+      .agent-nav > a[aria-current="page"] { background: var(--surface-2); color: var(--navy); font-weight: 600; }
+      .agent-nav .dot { background: var(--teal); }
+      .results {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-y: auto;
+        padding: 36px 40px 120px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+      .title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .title-row h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: 40px;
+        letter-spacing: -0.025em;
+        line-height: 1.1;
+      }
+      .summary {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 32px;
+        border-radius: 24px;
+        background: var(--navy);
+        color: #fff;
+      }
+      .summary .eyebrow { color: #b9c3d6; }
+      .end-field {
+        display: grid;
+        gap: 4px;
+        font-size: 13px;
+        color: #b9c3d6;
+      }
+      #end {
+        width: 100%;
+        padding: 4px 0;
+        border: 0;
+        border-block-end: 1px solid rgba(255, 255, 255, 0.18);
+        background: transparent;
+        color: #fff;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.35;
+        letter-spacing: -0.01em;
+      }
+      #end::placeholder { color: rgba(255, 255, 255, 0.55); font-weight: 500; }
+      #end:focus { outline: none; border-block-end-color: var(--teal-light); }
+      .figures { display: flex; flex-wrap: wrap; gap: 32px; padding-block-start: 8px; }
+      .figures div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .figures span:first-child { font-size: 13px; color: #b9c3d6; }
+      .figures span:last-child { font-size: 20px; font-weight: 700; }
+      .figures .positive { color: var(--teal-light); }
+      .section { display: flex; flex-direction: column; gap: 14px; }
+      .section > h2 { margin: 0; font-size: 18px; font-weight: 700; }
+      .card {
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .ok-card { display: flex; flex-direction: column; gap: 14px; }
+      .ok-card h3 { margin: 0; font-size: 17px; font-weight: 700; }
+      .ok-card p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2); }
+      .ok-card .row { display: flex; flex-wrap: wrap; gap: 8px; }
+      .ok-card.waiting { border-color: var(--navy); }
+      .muted { margin: 0; color: var(--text-2); font-size: 15px; }
+      #steps { display: flex; flex-direction: column; padding: 4px 24px; }
+      .step {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 0;
+        border-block-end: 1px solid var(--surface-2);
+      }
+      .step:last-child { border-block-end: 0; }
+      .step-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .step-text span:first-child { font-weight: 600; }
+      .step .meta { font-size: 13px; color: var(--text-3); overflow-wrap: anywhere; }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        height: 26px;
+        padding: 0 10px;
+        border-radius: 13px;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .chip.good { background: #e6f7f5; color: var(--teal-dark); }
+      .chip.now { background: var(--navy); color: #fff; }
+      .chip.next { background: var(--surface-2); color: var(--text-3); }
+      .chip.warn { background: var(--amber-tint); color: var(--amber-text); }
+      .steps-empty { margin: 0; padding: 12px 0; color: var(--text-2); }
+      .log { margin: 0; padding: 8px 24px; list-style: none; }
+      .log li {
+        display: flex;
+        gap: 16px;
+        padding: 14px 0;
+        border-block-end: 1px solid var(--surface-2);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .log li:last-child { border-block-end: 0; }
+      .log time { width: 52px; flex-shrink: 0; font-size: 14px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+      /* Agent panel */
+      .agent-panel {
+        flex: 0 0 380px;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         min-height: 0;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: var(--panel);
-        backdrop-filter: blur(18px);
-        box-shadow: var(--shadow);
-        overflow: hidden;
+        border-inline-start: 1px solid var(--border);
+        background: var(--surface);
       }
-      .panel.chat { animation: rise 0.65s ease both; animation-delay: 0.05s; }
-      .panel.stage { animation: rise 0.65s ease both; animation-delay: 0.12s; }
       .panel-head {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
-        padding: 14px 16px;
-        border-bottom: 1px solid var(--line);
-        background: rgba(0, 0, 0, 0.18);
+        padding: 14px 16px 14px 20px;
+        border-block-end: 1px solid var(--surface-2);
         flex-shrink: 0;
       }
-      .panel-head h2 {
-        margin: 0;
-        font-family: var(--display);
-        font-size: 0.95rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+      .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .who-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+      .who-text strong { font-size: 16px; font-weight: 700; }
+      .who-text span { font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .computer-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 14px 16px 0;
+        padding: 12px 12px 12px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        flex-shrink: 0;
       }
-      .mission-badge {
-        font-size: 0.75rem;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: var(--accent-dim);
-        color: var(--accent);
-        border: 1px solid rgba(0, 201, 183, 0.25);
+      .computer-card .info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .computer-card h2 { margin: 0; font-size: 15px; font-weight: 700; }
+      .computer-card .info > span { font-size: 13px; color: var(--text-2); }
+      .link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        align-self: flex-start;
+        margin-block-start: 6px;
+        min-height: 32px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--navy);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .link-btn:hover { text-decoration: underline; }
+      .thumb { position: relative; width: 150px; height: 96px; flex-shrink: 0; }
+      .screen-frame {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--dark-stage);
+        cursor: zoom-in;
+      }
+      .screen-frame.driving { cursor: crosshair; }
+      #screen {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: var(--dark-stage);
+      }
+      #screen.driving { cursor: crosshair; }
+      .screen-idle {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 8px;
+        text-align: center;
+        color: var(--dark-text-2);
+        pointer-events: none;
+      }
+      .screen-idle > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+      .screen-idle strong { color: #fff; font-size: 12px; font-weight: 600; }
+      .screen-idle .idle-text { font-size: 10px; line-height: 1.3; }
+      .screen-idle.hidden { display: none; }
+      .live-badge {
+        position: absolute;
+        inset-block-start: 6px;
+        inset-inline-end: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: #000;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        pointer-events: none;
+      }
+      .live-badge .dot { width: 5px; height: 5px; background: var(--teal); }
+      .screen-actions { display: flex; gap: 8px; flex-shrink: 0; }
+      .screen-actions .btn { flex: 1 1 0; min-height: 40px; padding: 0 14px; font-size: 14px; }
+      #actions-slot { padding: 12px 16px 0; flex-shrink: 0; }
+      .hint { margin: 6px 16px 0; min-height: 1.4em; font-size: 13px; color: var(--text-3); flex-shrink: 0; }
+      .chat-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-block-start: 10px;
+        padding: 10px 20px;
+        border-block: 1px solid var(--surface-2);
+        flex-shrink: 0;
+      }
+      .chat-head h2 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 12px;
+        background: var(--teal-tint);
+        color: var(--teal-dark);
+        font-size: 12px;
+        font-weight: 600;
       }
       #thread {
         flex: 1 1 0;
@@ -217,291 +636,538 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        padding: 16px;
+        padding: 18px 20px;
       }
       .msg {
-        max-width: 92%;
-        padding: 11px 14px;
-        border-radius: 14px;
-        border: 1px solid var(--line);
-        background: rgba(12, 18, 32, 0.65);
+        max-width: 88%;
+        padding: 11px 15px;
+        font-size: 15px;
+        line-height: 1.5;
         white-space: pre-wrap;
-        word-break: break-word;
-        animation: pop 0.28s ease both;
+        overflow-wrap: anywhere;
+        animation: op-in 0.25s ease both;
+      }
+      .msg.agent {
+        align-self: flex-start;
+        border-radius: 18px 18px 18px 6px;
+        background: var(--surface-2);
+        color: var(--navy);
       }
       .msg.user {
         align-self: flex-end;
-        background: linear-gradient(135deg, rgba(0, 201, 183, 0.22), rgba(0, 201, 183, 0.08));
-        border-color: rgba(0, 201, 183, 0.3);
+        border-radius: 18px 18px 6px 18px;
+        background: var(--navy);
+        color: #fff;
       }
-      .msg.agent { align-self: flex-start; }
-      .msg.thinking {
-        align-self: flex-start;
-        color: var(--muted);
-        font-style: italic;
-        background: transparent;
-      }
-      .composer-wrap {
-        padding: 12px 14px 14px;
-        border-top: 1px solid var(--line);
-        background: rgba(0, 0, 0, 0.16);
+      html[dir="rtl"] .msg.agent { border-radius: 18px 18px 6px 18px; }
+      html[dir="rtl"] .msg.user { border-radius: 18px 18px 18px 6px; }
+      .msg.thinking { align-self: flex-start; background: none; padding: 4px 2px; color: var(--text-3); font-style: italic; }
+      form#composer {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        padding: 14px 16px 16px;
+        border-block-start: 1px solid var(--surface-2);
         flex-shrink: 0;
       }
-      form#composer { display: flex; gap: 10px; align-items: end; }
       textarea#mission {
-        flex: 1;
-        min-height: 72px;
-        max-height: 160px;
-        resize: vertical;
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 48px;
+        max-height: 140px;
+        padding: 12px 18px;
+        border-radius: 24px;
+        resize: none;
+        line-height: 1.45;
       }
-      .plan-block {
-        padding: 0 16px 16px;
-        border-top: 1px solid var(--line);
-        background: rgba(0, 0, 0, 0.1);
-        flex: 0 0 auto;
-        max-height: 40%;
-        overflow: auto;
-      }
-      .plan-block .plan-title {
+      #send { min-height: 48px; }
+
+      /* Dock */
+      .dock {
+        position: fixed;
+        inset-inline: 0;
+        inset-block-end: 24px;
+        z-index: 20;
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
+        padding: 0 16px;
+        pointer-events: none;
+      }
+      .dock-bar {
+        pointer-events: auto;
+        display: flex;
         align-items: center;
-        padding: 12px 0 8px;
-        font-family: var(--display);
-        font-size: 0.8rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted);
+        gap: 6px;
+        padding: 6px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: 0 12px 32px rgba(41, 55, 84, 0.18);
       }
-      #end {
-        width: 100%;
-        margin-bottom: 8px;
+      .dock-open {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 56px;
+        padding-block: 0;
+        padding-inline: 8px 20px;
+        border-radius: 999px;
+        border: 0;
+        background: var(--surface);
+        text-align: start;
       }
-      #steps { display: grid; gap: 8px; }
-      .step {
-        padding: 10px 12px;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        background: rgba(41, 55, 85, 0.35);
-        font-size: 0.9rem;
+      .dock-open:hover, .dock-watch:hover { background: var(--surface-2); }
+      .dock-mark { position: relative; display: flex; }
+      .dock-mark .dot {
+        position: absolute;
+        inset-inline-end: -1px;
+        inset-block-end: -1px;
+        width: 12px;
+        height: 12px;
+        border-radius: 6px;
+        border: 2px solid #fff;
+        background: var(--teal);
       }
-      .step .meta {
-        display: block;
-        margin-top: 4px;
-        color: var(--muted);
-        font-size: 0.78rem;
+      .dock-open .who-text strong { font-size: 15px; }
+      .dock-open .who-text span { font-size: 12px; max-width: 240px; }
+      .dock-divider { width: 1px; height: 28px; background: var(--border); }
+      .dock-watch {
+        width: 48px;
+        height: 48px;
+        margin-inline-end: 4px;
+        border-radius: 24px;
+        border: 0;
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .steps-empty { color: var(--muted); font-size: 0.88rem; padding: 4px 0 8px; }
-      .screen-frame {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-        margin: 16px;
+
+      /* Full-screen computer */
+      .full {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        background: var(--dark-stage);
+        color: #fff;
+        overflow-y: auto;
+      }
+      .full-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 24px;
+        border-block-end: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .full-top .who-text strong { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+      .full-top .who-text span { color: var(--dark-text-2); white-space: normal; }
+      .live-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 6px;
+        background: rgba(9, 200, 184, 0.16);
+        color: var(--teal-light);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+      .live-chip .dot { width: 6px; height: 6px; background: var(--teal); }
+      .full-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+      .full-actions .screen-actions .btn {
+        background: transparent;
+        border-color: rgba(255, 255, 255, 0.25);
+        color: #fff;
+      }
+      .full-actions .screen-actions .btn:hover { background: rgba(255, 255, 255, 0.08); }
+      .full-actions .btn.light { border: 0; background: #fff; color: var(--dark-stage); }
+      .full-body { flex-grow: 1; display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; min-height: 0; }
+      .stage {
+        flex: 999 1 640px;
+        min-width: 0;
+        min-height: 420px;
+        display: flex;
+        flex-direction: column;
         border-radius: 14px;
         overflow: hidden;
-        border: 1px solid var(--line);
-        background:
-          linear-gradient(180deg, rgba(0, 201, 183, 0.05), transparent 40%),
-          #070b14;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        background: #000;
       }
-      #screen {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        background: #070b14;
-        cursor: default;
+      .stage .screen-frame { border-radius: 0; flex-grow: 1; height: auto; cursor: default; }
+      .stage .screen-frame.driving { cursor: crosshair; }
+      .stage .screen-idle strong { font-size: 18px; }
+      .stage .screen-idle .idle-text { font-size: 14px; }
+      .stage .live-badge { display: none; }
+      .full-side { flex: 1 1 280px; display: flex; flex-direction: column; gap: 14px; }
+      .full-side h2 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dark-text-2); }
+      .full-steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+      .full-steps li { display: flex; align-items: center; gap: 12px; padding: 10px 0; font-size: 15px; color: #8a94a8; }
+      .full-steps li.done { color: var(--dark-text-2); }
+      .full-steps li.now {
+        margin: 0 -12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        font-weight: 600;
       }
-      #screen.driving { cursor: crosshair; }
-      .screen-idle {
-        position: absolute;
-        inset: 0;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        text-align: center;
-        color: var(--muted);
-        pointer-events: none;
-        background:
-          radial-gradient(circle at 50% 40%, rgba(0, 201, 183, 0.12), transparent 55%),
-          repeating-linear-gradient(
-            -12deg,
-            transparent,
-            transparent 18px,
-            rgba(255, 255, 255, 0.015) 18px,
-            rgba(255, 255, 255, 0.015) 19px
-          );
+      .full-steps .mark { display: flex; width: 20px; justify-content: center; flex-shrink: 0; }
+      .full-steps .ring { width: 10px; height: 10px; border-radius: 5px; border: 1.5px solid var(--text-3); }
+      .full-steps .now-dot { width: 10px; height: 10px; border-radius: 5px; background: var(--teal); }
+      .full-side .safety {
+        margin: 8px 0 0;
+        padding-block-start: 16px;
+        border-block-start: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--dark-text-2);
       }
-      .screen-idle strong {
-        display: block;
-        font-family: var(--display);
-        color: var(--ink);
-        font-size: 1.05rem;
-        margin-bottom: 6px;
-      }
-      .screen-idle.hidden { display: none; }
-      .screen-actions {
-        display: flex;
-        gap: 10px;
-        padding: 0 16px 16px;
-        flex-shrink: 0;
-      }
-      .screen-actions button { flex: 1; }
-      .hint {
-        padding: 0 16px 16px;
-        color: var(--muted);
-        font-size: 0.82rem;
-        flex-shrink: 0;
-      }
+      .full .hint { margin: 0; color: var(--dark-text-2); }
+
+      /* Key and vault cards */
       .overlay {
         position: fixed;
         inset: 0;
-        z-index: 20;
+        z-index: 70;
         display: grid;
         place-items: center;
         padding: 24px;
-        background: rgba(6, 10, 18, 0.72);
-        backdrop-filter: blur(10px);
+        background: rgba(41, 55, 84, 0.35);
+        backdrop-filter: blur(6px);
       }
-      .overlay.hidden { display: none; }
+      .overlay[aria-hidden="true"], .overlay.hidden { display: none; }
       .key-card {
-        width: min(440px, 100%);
-        padding: 28px 26px;
-        border-radius: 22px;
-        border: 1px solid rgba(0, 201, 183, 0.28);
-        background:
-          linear-gradient(160deg, rgba(30, 42, 66, 0.98), rgba(18, 26, 43, 0.96));
-        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.03);
-        animation: rise 0.45s ease both;
+        width: min(460px, 100%);
+        padding: 28px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: 0 24px 64px rgba(41, 55, 84, 0.22);
+        animation: op-in 0.35s ease both;
       }
-      .key-card h2 {
-        margin: 0 0 8px;
-        font-family: var(--display);
-        font-size: 1.45rem;
-        letter-spacing: -0.02em;
-      }
-      .key-card p {
-        margin: 0 0 18px;
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-      .key-card .row { display: flex; gap: 10px; }
-      .key-card input { flex: 1; }
-      .key-card .stack { display: grid; gap: 10px; margin-top: 12px; }
+      .key-card h2 { margin: 8px 0 8px; font-family: var(--display); font-weight: 800; font-size: 26px; letter-spacing: -0.02em; }
+      .key-card p { margin: 0 0 18px; color: var(--text-2); }
+      .key-card .row { display: flex; gap: 8px; }
+      .key-card .row input { flex: 1 1 auto; min-width: 0; }
+      .key-card .stack { display: grid; gap: 10px; }
+      .key-msg { margin-top: 12px; min-height: 1.3em; font-size: 14px; color: var(--text-2); }
+      .key-msg.err { color: var(--red-text); }
+      .key-msg.ok { color: var(--teal-dark); }
       .vault-list { display: grid; gap: 8px; margin-top: 14px; max-height: 220px; overflow: auto; }
       .vault-item {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
         gap: 10px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        background: rgba(0, 0, 0, 0.22);
+        padding: 8px 8px 8px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
       }
-      .vault-item span { color: var(--ink); font-weight: 500; }
-      .vault-empty { color: var(--muted); font-size: 0.9rem; margin: 12px 0 0; }
-      .key-msg {
-        margin-top: 12px;
-        min-height: 1.2em;
-        font-size: 0.88rem;
-        color: var(--muted);
-      }
-      .key-msg.err { color: #ff8d8d; }
-      .key-msg.ok { color: var(--accent); }
-      @keyframes rise {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: none; }
-      }
-      @keyframes pop {
-        from { opacity: 0; transform: translateY(6px) scale(0.98); }
-        to { opacity: 1; transform: none; }
+      .vault-item span { font-weight: 600; overflow-wrap: anywhere; }
+      .vault-empty { margin: 12px 0 0; color: var(--text-2); font-size: 14px; }
+
+      /* Responsive */
+      @media (max-width: 1180px) {
+        .agent-nav { display: none; }
       }
       @media (max-width: 960px) {
-        main.desk {
-          grid-template-columns: 1fr;
-          grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-        }
-        .shell { padding: 12px; }
+        header.topbar { padding: 10px 16px; }
+        .workspace { flex-direction: column; }
+        .results { flex: 0 0 34%; padding: 20px 16px 40px; gap: 24px; }
+        .agent-panel { flex: 1 1 0; border-inline-start: 0; border-block-start: 1px solid var(--border); }
+        .panel-head { padding: 8px 12px 8px 16px; }
+        .panel-head svg { width: 36px; height: 36px; }
+        .computer-card { margin: 8px 12px 0; padding: 8px 8px 8px 12px; }
+        .computer-card .link-btn { margin-block-start: 0; }
+        .thumb { width: 112px; height: 70px; }
+        #actions-slot { padding: 8px 12px 0; }
+        .hint { margin: 4px 12px 0; }
+        .chat-head { margin-block-start: 4px; padding: 6px 16px; }
+        #thread { padding: 12px 16px; }
+        form#composer { padding: 10px 12px 12px; }
+        .title-row h1 { font-size: 30px; }
+        .summary { padding: 24px; }
+        .home-inner { padding: 40px 16px 64px; }
+        .full-body { padding: 16px; }
       }
-      html[dir="rtl"] .msg.user { align-self: flex-start; }
-      html[dir="rtl"] .msg.agent { align-self: flex-end; }
+      @media (max-width: 560px) {
+        .crumb { display: none; }
+        .top-end .pill { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .pulse, .msg, .intro-end, .key-card { animation: none; }
+      }
     </style>
   </head>
   <body>
-    <div class="shell">
-      <header class="app-bar">
-        <div class="brand">
-          <h1 id="title">Opero</h1>
-          <span class="subtitle" id="subtitle">House</span>
+    <section class="intro" id="view-intro" hidden aria-label="Opero intro">
+      <video id="intro-video" src="./assets/opero-intro.mp4" muted playsinline preload="auto"></video>
+      <div class="intro-controls">
+        <button class="btn round" id="intro-sound" type="button" aria-label="Turn sound on">
+          <svg id="icon-muted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>
+          <svg id="icon-sound" hidden width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>
+        </button>
+        <a class="btn" id="intro-skip" href="#home" data-l="skipIntro">Skip intro</a>
+      </div>
+      <div class="intro-end" id="intro-end" hidden>
+        <p data-l="tagline">Life without bureaucracies.</p>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px">
+          <button class="btn" id="intro-play" type="button" hidden data-l="playIntro">Play intro</button>
+          <a class="btn primary" id="intro-enter" href="#home"><span data-l="enter">Enter Opero Home</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
         </div>
-        <div class="controls">
-          <div class="status-pill" id="conn-pill"><span class="dot"></span><span id="conn-text">Offline</span></div>
-          <div class="status-pill" id="mission-pill"><span class="dot"></span><span id="mission-text">—</span></div>
-          <label class="field" id="level-label">Level
-            <select id="level"><option value="1">1</option><option value="2" selected>2</option></select>
-          </label>
-          <label class="field" id="language-label">Language
-            <select id="language"><option value="en">English</option><option value="he">עברית</option></select>
-          </label>
-          <button class="ghost" id="vault-open" type="button">Vault</button>
+      </div>
+    </section>
+
+    <div class="app" id="app">
+      <header class="topbar">
+        <div class="top-start">
+          <h1 class="wordmark">
+            <a href="#intro" id="brand-link" dir="ltr" data-l-title="replayIntro" title="Opero — replay intro">
+              <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><rect width="100" height="100" rx="46" fill="#293754"/><rect x="22.8" y="17.4" width="54.8" height="64.6" rx="27" fill="#fff"/><circle cx="50" cy="50.5" r="24.6" fill="#000"/><circle cx="42" cy="50" r="4.9" fill="#09C8B8"/><circle cx="57.6" cy="49.6" r="4.9" fill="#09C8B8"/></svg>
+              <span class="sr-only" id="title">Opero</span><span class="pero" aria-hidden="true">PERO</span>
+            </a>
+          </h1>
+          <p class="crumb" id="crumb"><a href="#home" data-l="crumbHome">Home</a> <span aria-hidden="true">/</span> <strong id="subtitle">House</strong></p>
+        </div>
+        <nav class="switcher" id="switcher" hidden data-l-aria="products" aria-label="Opero products">
+          <a href="#home" aria-current="page" data-l="productHome">Home</a>
+          <span><span data-l="productBusiness">Business</span><span class="tag" data-l="soon">Soon</span></span>
+          <span><span data-l="productHealth">Health</span><span class="tag" data-l="soon">Soon</span></span>
+        </nav>
+        <div class="top-end">
+          <div class="pill" id="conn-pill"><span class="dot"></span><span id="conn-text">Offline</span></div>
+          <button class="avatar" id="settings-open" type="button" aria-expanded="false" aria-controls="settings-pop" data-l-aria="settings" aria-label="Settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          </button>
+          <div class="popover" id="settings-pop" hidden>
+            <p class="eyebrow" data-l="settings">Settings</p>
+            <label class="field" id="level-label">Level
+              <select id="level"><option value="1">1</option><option value="2" selected>2</option></select>
+            </label>
+            <label class="field" id="language-label">Language
+              <select id="language"><option value="en">English</option><option value="he">עברית</option></select>
+            </label>
+            <button class="btn" id="vault-open" type="button">Vault</button>
+          </div>
         </div>
       </header>
 
-      <main class="desk">
-        <section class="panel chat">
-          <div class="panel-head">
-            <h2 id="chat-heading">Mission</h2>
-            <span class="mission-badge" id="ready-badge">…</span>
+      <main class="home" id="view-home" hidden>
+        <div class="home-inner">
+          <div class="home-hero">
+            <p class="eyebrow" data-l="homeEyebrow">Opero Home</p>
+            <h1 id="greeting">Good evening.</h1>
+            <p class="sub" data-l="homeSub">Your agents deal with the bureaucracy. You only see what changed and what needs your OK.</p>
           </div>
-          <div id="thread"></div>
-          <div class="composer-wrap">
-            <form id="composer">
-              <textarea id="mission" placeholder="Give a mission…" rows="3"></textarea>
-              <button class="primary" id="send" type="submit">Send</button>
-            </form>
+          <div class="agent-grid">
+            <a class="agent-card active" href="#house" id="house-card">
+              <div class="card-top">
+                <div class="tile">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+                </div>
+                <span class="status-line"><span class="dot" style="background: var(--teal)"></span><span data-l="active">Active</span></span>
+              </div>
+              <div class="card-body">
+                <h2 data-l="agentName">House agent</h2>
+                <p data-l="houseCardBody">Give it any errand. It works in a real browser and asks before anything costs money.</p>
+              </div>
+              <div class="card-foot">
+                <span id="house-card-foot">Open</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: scaleX(var(--flip, 1))"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+              </div>
+            </a>
+            <div class="agent-card">
+              <div class="card-top">
+                <div class="tile"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></div>
+                <span class="tag" data-l="comingSoon">Coming soon</span>
+              </div>
+              <div class="card-body"><h2 data-l="insurance">Insurance</h2><p data-l="insuranceBody"></p></div>
+            </div>
+            <div class="agent-card">
+              <div class="card-top">
+                <div class="tile"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6"/><path d="M9 12h6"/></svg></div>
+                <span class="tag" data-l="comingSoon">Coming soon</span>
+              </div>
+              <div class="card-body"><h2 data-l="bills">Bills</h2><p data-l="billsBody"></p></div>
+            </div>
+            <div class="agent-card">
+              <div class="card-top">
+                <div class="tile"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg></div>
+                <span class="tag" data-l="comingSoon">Coming soon</span>
+              </div>
+              <div class="card-body"><h2 data-l="groceries">Groceries</h2><p data-l="groceriesBody"></p></div>
+            </div>
+            <div class="agent-card">
+              <div class="card-top">
+                <div class="tile"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg></div>
+                <span class="tag" data-l="comingSoon">Coming soon</span>
+              </div>
+              <div class="card-body"><h2 data-l="food">Food planning</h2><p data-l="foodBody"></p></div>
+            </div>
           </div>
-          <div class="plan-block">
-            <div class="plan-title"><span id="plan-label">Plan</span></div>
-            <label class="field" id="end-label">End
-              <input id="end" />
-            </label>
-            <div id="steps"><p class="steps-empty" id="steps-empty">Steps appear after you send a mission</p></div>
+        </div>
+      </main>
+
+      <div class="workspace" id="view-house">
+        <nav class="agent-nav" data-l-aria="agents" aria-label="Opero Home agents">
+          <p class="eyebrow" data-l="homeEyebrow">Opero Home</p>
+          <a href="#house" aria-current="page"><span data-l="agentName">House agent</span><span class="dot pulse"></span></a>
+          <span><span data-l="insurance">Insurance</span><span class="tag" data-l="soon">Soon</span></span>
+          <span><span data-l="bills">Bills</span><span class="tag" data-l="soon">Soon</span></span>
+          <span><span data-l="groceries">Groceries</span><span class="tag" data-l="soon">Soon</span></span>
+          <span><span data-l="food">Food planning</span><span class="tag" data-l="soon">Soon</span></span>
+        </nav>
+
+        <section class="results" aria-labelledby="agent-title">
+          <div class="title-row">
+            <h1 id="agent-title" data-l="agentName">House agent</h1>
+            <div class="pill" id="mission-pill"><span class="dot"></span><span id="mission-text">—</span></div>
           </div>
+
+          <section class="summary" aria-labelledby="summary-label">
+            <h2 class="eyebrow" id="summary-label" data-l="shortVersion">The short version</h2>
+            <label class="end-field" id="end-label">End <input id="end" autocomplete="off" /></label>
+            <div class="figures">
+              <div><span data-l="stepsDone">Steps done</span><span id="fig-steps" class="positive">—</span></div>
+              <div><span data-l="now">Now</span><span id="fig-now">—</span></div>
+            </div>
+          </section>
+
+          <section class="section" aria-labelledby="ok-heading">
+            <h2 id="ok-heading" data-l="needsOk">Needs your OK</h2>
+            <div id="ok-list"></div>
+          </section>
+
+          <section class="section" aria-labelledby="plan-label">
+            <h2 id="plan-label">Plan</h2>
+            <div class="card" style="padding: 0">
+              <div id="steps"><p class="steps-empty" id="steps-empty">Steps appear after you send a mission</p></div>
+            </div>
+          </section>
+
+          <section class="section" aria-labelledby="did-heading">
+            <h2 id="did-heading" data-l="did">What Opero did</h2>
+            <div class="card" style="padding: 0">
+              <ol class="log" id="did-list"></ol>
+            </div>
+          </section>
         </section>
 
-        <section class="panel stage">
+        <aside class="agent-panel" id="agent-panel" aria-labelledby="panel-name">
           <div class="panel-head">
-            <h2 id="screen-heading">Computer</h2>
+            <div class="who">
+              <svg viewBox="0 0 100 100" width="44" height="44" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="#000"/><circle cx="38" cy="50" r="8" fill="#09C8B8"/><circle cx="62" cy="50" r="8" fill="#09C8B8"/></svg>
+              <div class="who-text">
+                <strong id="panel-name" data-l="agentName">House agent</strong>
+                <span id="panel-status">Waiting for a mission</span>
+              </div>
+            </div>
+            <button class="btn round" id="dock-hide" type="button" data-l-aria="hideDock" aria-label="Hide agent to the dock">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
           </div>
-          <div class="screen-frame">
-            <img id="screen" alt="" hidden tabindex="0" />
-            <div class="screen-idle" id="screen-idle">
-              <div>
-                <strong id="idle-title">Computer</strong>
-                <span id="idle-text">The house computer wakes when a mission starts</span>
+
+          <div class="computer-card">
+            <div class="info">
+              <h2 id="screen-heading">Computer</h2>
+              <span id="computer-status">Waiting for a mission</span>
+              <button class="link-btn" id="watch-open" type="button"><span data-l="watchFull">Watch full screen</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg></button>
+            </div>
+            <div class="thumb" id="thumb-slot">
+              <div class="screen-frame" id="screen-frame">
+                <img id="screen" alt="" hidden tabindex="0" />
+                <div class="screen-idle" id="screen-idle">
+                  <div>
+                    <strong id="idle-title">Computer</strong>
+                    <span class="idle-text" id="idle-text">The house computer wakes when a mission starts</span>
+                  </div>
+                </div>
+                <span class="live-badge" id="live-badge" hidden><span class="dot pulse"></span><span id="live-text">LIVE</span></span>
               </div>
             </div>
           </div>
-          <div class="screen-actions">
-            <button class="ghost" id="take" type="button">Take control</button>
-            <button class="ghost" id="hand" type="button">I'm done</button>
+
+          <div id="actions-slot">
+            <div class="screen-actions" id="screen-actions">
+              <button class="btn" id="take" type="button">Take control</button>
+              <button class="btn" id="hand" type="button">I'm done</button>
+            </div>
           </div>
           <p class="hint" id="driver-hint"></p>
-        </section>
-      </main>
+
+          <div class="chat-head">
+            <h2 id="chat-heading">Mission</h2>
+            <span class="badge" id="ready-badge">…</span>
+          </div>
+          <div id="thread"></div>
+          <form id="composer">
+            <label for="mission" class="sr-only" data-l="mission">Mission</label>
+            <textarea id="mission" placeholder="Give a mission…" rows="1"></textarea>
+            <button class="btn primary" id="send" type="submit">Send</button>
+          </form>
+        </aside>
+      </div>
+    </div>
+
+    <div class="dock" id="dock" hidden>
+      <div class="dock-bar">
+        <button class="dock-open" id="dock-open" type="button" data-l-aria="showAgent" aria-label="Open your agent">
+          <span class="dock-mark">
+            <svg viewBox="0 0 100 100" width="42" height="42" aria-hidden="true"><rect width="100" height="100" rx="46" fill="#293754"/><rect x="22.8" y="17.4" width="54.8" height="64.6" rx="27" fill="#fff"/><circle cx="50" cy="50.5" r="24.6" fill="#000"/><circle cx="42" cy="50" r="4.9" fill="#09C8B8"/><circle cx="57.6" cy="49.6" r="4.9" fill="#09C8B8"/></svg>
+            <span class="dot pulse"></span>
+          </span>
+          <span class="who-text"><strong data-l="agentName">House agent</strong><span id="dock-status">Waiting for a mission</span></span>
+        </button>
+        <span class="dock-divider" aria-hidden="true"></span>
+        <button class="dock-watch" id="dock-watch" type="button" data-l-aria="watch" aria-label="Watch the computer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="full" id="full" role="dialog" aria-modal="true" aria-labelledby="full-title" hidden>
+      <div class="full-top">
+        <div class="who">
+          <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true"><circle cx="50" cy="50" r="49" fill="#000" stroke="#2A3448" stroke-width="2"/><circle cx="38" cy="50" r="8" fill="#09C8B8"/><circle cx="62" cy="50" r="8" fill="#09C8B8"/></svg>
+          <div class="who-text">
+            <strong><span id="full-title" data-l="fullTitle">Agent’s computer</span><span class="live-chip" id="full-live" hidden><span class="dot pulse"></span><span id="full-live-text">LIVE</span></span></strong>
+            <span data-l="fullSub">You’re watching exactly what the agent sees and does.</span>
+          </div>
+        </div>
+        <div class="full-actions" id="full-actions">
+          <button class="btn light" id="full-close" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg><span data-l="fullClose">Close</span>
+          </button>
+        </div>
+      </div>
+      <div class="full-body">
+        <div class="stage" id="stage-slot"></div>
+        <div class="full-side">
+          <h2 data-l="fullSteps">Steps</h2>
+          <ol class="full-steps" id="full-steps"></ol>
+          <p class="hint" id="full-hint"></p>
+          <p class="safety" data-l="safety">Opero asks before it pays, signs or cancels anything. You can take control at any time.</p>
+        </div>
+      </div>
     </div>
 
     <div class="overlay" id="key-overlay" aria-hidden="false">
-      <div class="key-card">
+      <div class="key-card" role="dialog" aria-labelledby="key-title">
+        <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true"><rect width="100" height="100" rx="46" fill="#293754"/><rect x="22.8" y="17.4" width="54.8" height="64.6" rx="27" fill="#fff"/><circle cx="50" cy="50.5" r="24.6" fill="#000"/><circle cx="42" cy="50" r="4.9" fill="#09C8B8"/><circle cx="57.6" cy="49.6" r="4.9" fill="#09C8B8"/></svg>
         <h2 id="key-title">Connect Grok</h2>
         <p id="key-body">Paste your xAI API key. It stays on this machine in data/xai.key and is never shown again.</p>
         <div class="row">
-          <input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="xai-…" />
-          <button class="primary" id="key-save" type="button">Save key</button>
+          <input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="xai-…" aria-labelledby="key-title" />
+          <button class="btn primary" id="key-save" type="button">Save key</button>
         </div>
-        <div class="key-msg" id="key-msg"></div>
+        <div class="key-msg" id="key-msg" role="status"></div>
       </div>
     </div>
 
@@ -513,11 +1179,11 @@
           <input id="vault-description" autocomplete="off" spellcheck="false" placeholder="What it is for" />
           <input id="vault-value" type="password" autocomplete="off" spellcheck="false" placeholder="Secret" />
           <div class="row">
-            <button class="primary" id="vault-save" type="button">Save</button>
-            <button class="ghost" id="vault-close" type="button">Close</button>
+            <button class="btn primary" id="vault-save" type="button">Save</button>
+            <button class="btn" id="vault-close" type="button">Close</button>
           </div>
         </div>
-        <div class="key-msg" id="vault-msg"></div>
+        <div class="key-msg" id="vault-msg" role="status"></div>
         <div class="vault-list" id="vault-list"></div>
       </div>
     </div>
@@ -528,35 +1194,55 @@
       import { HOUSE_WS_URL } from "./config.mjs"
       import { readFrame } from "./read-frame.mjs"
 
-      const thread = document.querySelector("#thread")
-      const steps = document.querySelector("#steps")
-      const end = document.querySelector("#end")
-      const screen = document.querySelector("#screen")
-      const screenIdle = document.querySelector("#screen-idle")
-      const mission = document.querySelector("#mission")
-      const keyOverlay = document.querySelector("#key-overlay")
-      const keyInput = document.querySelector("#key-input")
-      const keyMsg = document.querySelector("#key-msg")
-      const vaultOverlay = document.querySelector("#vault-overlay")
-      const vaultList = document.querySelector("#vault-list")
-      const vaultDescription = document.querySelector("#vault-description")
-      const vaultValue = document.querySelector("#vault-value")
-      const vaultMsg = document.querySelector("#vault-msg")
-      const connPill = document.querySelector("#conn-pill")
-      const connText = document.querySelector("#conn-text")
-      const missionPill = document.querySelector("#mission-pill")
-      const missionText = document.querySelector("#mission-text")
-      const readyBadge = document.querySelector("#ready-badge")
-      const driverHint = document.querySelector("#driver-hint")
+      const $ = (selector) => document.querySelector(selector)
+      const thread = $("#thread")
+      const steps = $("#steps")
+      const end = $("#end")
+      const screen = $("#screen")
+      const screenIdle = $("#screen-idle")
+      const screenFrame = $("#screen-frame")
+      const screenActions = $("#screen-actions")
+      const mission = $("#mission")
+      const keyOverlay = $("#key-overlay")
+      const keyInput = $("#key-input")
+      const keyMsg = $("#key-msg")
+      const vaultOverlay = $("#vault-overlay")
+      const vaultList = $("#vault-list")
+      const vaultDescription = $("#vault-description")
+      const vaultValue = $("#vault-value")
+      const vaultMsg = $("#vault-msg")
+      const connPill = $("#conn-pill")
+      const connText = $("#conn-text")
+      const missionPill = $("#mission-pill")
+      const missionText = $("#mission-text")
+      const readyBadge = $("#ready-badge")
+      const driverHint = $("#driver-hint")
+      const full = $("#full")
+      const dock = $("#dock")
+      const panel = $("#agent-panel")
+      const settingsPop = $("#settings-pop")
+      const settingsOpen = $("#settings-open")
+      const introVideo = $("#intro-video")
+
+      const INTRO_SEEN = "opero.introSeen"
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
       let missionLive = false
+      let missionStatus = ""
       let workStatusPollMs = 1000
       let workStatusTimer = null
       let ready = false
       let driver = "agent"
       let labels = {}
+      let language = "en"
       let hasScreen = false
       let vaultItems = []
+      let plan = null
+      let pending = null
+      let work = null
+      let lastAction = ""
+      const actions = []
+      let fullOpener = null
       const VIEWPORT_WIDTH = 1280
       const VIEWPORT_HEIGHT = 800
       let screenWidth = VIEWPORT_WIDTH
@@ -586,8 +1272,8 @@
         const message = readFrame(event.data)
         if (!message) return
         if (message.type === "settings") {
-          document.querySelector("#level").value = String(message.level)
-          document.querySelector("#language").value = message.language
+          $("#level").value = String(message.level)
+          $("#language").value = message.language
           if (message.workStatusPollMs) workStatusPollMs = message.workStatusPollMs
           applyLabels(labelMap[message.language] || labelMap.en, message.language)
         }
@@ -601,7 +1287,7 @@
         if (message.type === "key_result") {
           keyMsg.className = "key-msg " + (message.ok === true ? "ok" : message.ok === false ? "err" : "")
           keyMsg.textContent = message.message || ""
-          document.querySelector("#key-save").disabled = message.ok === null
+          $("#key-save").disabled = message.ok === null
         }
         if (message.type === "thread" && Array.isArray(message.messages)) {
           thread.replaceChildren()
@@ -615,6 +1301,7 @@
         if (message.type === "question") {
           clearThinking()
           add("agent", message.question)
+          pending = { question: message.question, reason: message.reason }
           setMissionStatus("waiting_on_user")
         }
         if (message.type === "status") setMissionStatus(message.status)
@@ -627,6 +1314,7 @@
           if (message.width) screenWidth = message.width
           if (message.height) screenHeight = message.height
           screenIdle.classList.add("hidden")
+          updateAgentStatus()
         }
         if (message.type === "driver") {
           driver = message.driver
@@ -644,9 +1332,10 @@
             vaultValue.value = ""
           }
         }
+        if (message.type === "work_status") showWork(message.status)
       })
 
-      document.querySelector("#composer").addEventListener("submit", (event) => {
+      $("#composer").addEventListener("submit", (event) => {
         event.preventDefault()
         const text = mission.value.trim()
         if (!text) return
@@ -656,43 +1345,54 @@
         }
         send({ type: "mission", text })
         mission.value = ""
+        fitComposer()
       })
+      mission.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+          event.preventDefault()
+          $("#composer").requestSubmit()
+        }
+      })
+      mission.addEventListener("input", fitComposer)
       end.addEventListener("change", () => send({ type: "edit_end", end: end.value }))
-      document.querySelector("#level").addEventListener("change", (event) => send({ type: "level", level: Number(event.target.value) }))
-      document.querySelector("#language").addEventListener("change", (event) => {
+      $("#level").addEventListener("change", (event) => send({ type: "level", level: Number(event.target.value) }))
+      $("#language").addEventListener("change", (event) => {
         const language = event.target.value
         send({ type: "language", language })
         applyLabels(labelMap[language], language)
       })
-      document.querySelector("#take").addEventListener("click", () => {
+      $("#take").addEventListener("click", () => {
         driver = "user"
         updateDriverUi()
         send({ type: "driver", text: "user" })
+        openFull($("#take"))
         screen.focus()
       })
-      document.querySelector("#hand").addEventListener("click", () => {
+      $("#hand").addEventListener("click", () => {
         driver = "agent"
         updateDriverUi()
         send({ type: "driver", text: "agent" })
       })
-      document.querySelector("#key-save").addEventListener("click", () => {
+      $("#key-save").addEventListener("click", () => {
         const key = keyInput.value.trim()
         send({ type: "save_key", key })
       })
       keyInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") document.querySelector("#key-save").click()
+        if (event.key === "Enter") $("#key-save").click()
       })
-      document.querySelector("#vault-open").addEventListener("click", () => {
+      $("#vault-open").addEventListener("click", () => {
+        closeSettings()
         vaultOverlay.classList.remove("hidden")
         vaultOverlay.setAttribute("aria-hidden", "false")
         vaultMsg.textContent = ""
         send({ type: "vault_list" })
+        vaultDescription.focus()
       })
-      document.querySelector("#vault-close").addEventListener("click", () => {
+      $("#vault-close").addEventListener("click", () => {
         vaultOverlay.classList.add("hidden")
         vaultOverlay.setAttribute("aria-hidden", "true")
       })
-      document.querySelector("#vault-save").addEventListener("click", () => {
+      $("#vault-save").addEventListener("click", () => {
         send({
           type: "vault_save",
           description: vaultDescription.value.trim(),
@@ -700,7 +1400,7 @@
         })
       })
       vaultOverlay.addEventListener("click", (event) => {
-        if (event.target === vaultOverlay) document.querySelector("#vault-close").click()
+        if (event.target === vaultOverlay) $("#vault-close").click()
       })
       screen.addEventListener("click", (event) => {
         if (driver !== "user") return
@@ -726,6 +1426,163 @@
         }
       })
 
+      // Panel, dock and full-screen computer
+      screenFrame.addEventListener("click", () => {
+        if (driver !== "user" && full.hidden) openFull(screenFrame)
+      })
+      $("#watch-open").addEventListener("click", (event) => openFull(event.currentTarget))
+      $("#dock-watch").addEventListener("click", (event) => openFull(event.currentTarget))
+      $("#full-close").addEventListener("click", closeFull)
+      $("#dock-hide").addEventListener("click", () => setPanel(false))
+      $("#dock-open").addEventListener("click", () => setPanel(true))
+
+      function setPanel(open) {
+        panel.hidden = !open
+        dock.hidden = open
+        if (open) $("#dock-hide").focus()
+        else $("#dock-open").focus()
+      }
+
+      function openFull(opener) {
+        if (!full.hidden) return
+        fullOpener = opener || document.activeElement
+        $("#stage-slot").append(screenFrame)
+        $("#full-actions").prepend(screenActions)
+        full.hidden = false
+        document.body.style.overflow = "hidden"
+        $("#full-close").focus()
+      }
+
+      function closeFull() {
+        if (full.hidden) return
+        $("#thumb-slot").append(screenFrame)
+        $("#actions-slot").append(screenActions)
+        full.hidden = true
+        const target = fullOpener && document.contains(fullOpener) && !fullOpener.closest("[hidden]") ? fullOpener : $("#watch-open")
+        fullOpener = null
+        target.focus()
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.defaultPrevented) return
+        if (event.key === "Escape") {
+          if (!settingsPop.hidden) return closeSettings(true)
+          if (!full.hidden) return closeFull()
+        }
+        if (event.key === "Tab" && !full.hidden) trapFocus(event)
+      })
+
+      function trapFocus(event) {
+        const items = [...full.querySelectorAll("button, [href], input, textarea, select, [tabindex]:not([tabindex='-1'])")]
+          .filter((item) => !item.disabled && !item.hidden && item.offsetParent !== null)
+        if (items.length === 0) return
+        const first = items[0]
+        const last = items[items.length - 1]
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault()
+          last.focus()
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault()
+          first.focus()
+        } else if (!full.contains(document.activeElement)) {
+          event.preventDefault()
+          first.focus()
+        }
+      }
+
+      // Settings popover
+      settingsOpen.addEventListener("click", () => {
+        if (settingsPop.hidden) {
+          settingsPop.hidden = false
+          settingsOpen.setAttribute("aria-expanded", "true")
+          $("#level").focus()
+        } else closeSettings(true)
+      })
+      document.addEventListener("click", (event) => {
+        if (settingsPop.hidden) return
+        if (settingsPop.contains(event.target) || settingsOpen.contains(event.target)) return
+        closeSettings()
+      })
+      function closeSettings(refocus) {
+        if (settingsPop.hidden) return
+        settingsPop.hidden = true
+        settingsOpen.setAttribute("aria-expanded", "false")
+        if (refocus) settingsOpen.focus()
+      }
+
+      // Views: #intro, #home, and the house agent (default)
+      function route() {
+        const hash = location.hash
+        const view = hash === "#intro" ? "intro" : hash === "#home" ? "home" : "house"
+        $("#view-intro").hidden = view !== "intro"
+        $("#app").hidden = view === "intro"
+        $("#view-home").hidden = view !== "home"
+        $("#view-house").hidden = view !== "house"
+        $("#switcher").hidden = view !== "home"
+        $("#crumb").hidden = view !== "house"
+        dock.hidden = view !== "house" || !panel.hidden
+        if (view === "intro") startIntro()
+        else stopIntro()
+        if (view === "home") renderHome()
+      }
+      window.addEventListener("hashchange", route)
+
+      function seenIntro() {
+        try { return localStorage.getItem(INTRO_SEEN) === "1" } catch { return true }
+      }
+      function markIntroSeen() {
+        try { localStorage.setItem(INTRO_SEEN, "1") } catch {}
+      }
+      if (!location.hash && !seenIntro() && !navigator.webdriver) {
+        history.replaceState(null, "", "#intro")
+      }
+
+      function startIntro() {
+        markIntroSeen()
+        $("#intro-end").hidden = true
+        $("#intro-play").hidden = true
+        introVideo.currentTime = 0
+        if (reducedMotion) return introEnded(true)
+        const playing = introVideo.play()
+        if (playing && playing.catch) playing.catch(() => introEnded(true))
+      }
+      function stopIntro() {
+        if (!introVideo.paused) introVideo.pause()
+      }
+      function introEnded(showPlay) {
+        $("#intro-end").hidden = false
+        $("#intro-play").hidden = !showPlay
+        $("#intro-enter").focus()
+      }
+      introVideo.addEventListener("ended", () => introEnded(false))
+      $("#intro-play").addEventListener("click", () => {
+        $("#intro-end").hidden = true
+        introVideo.currentTime = 0
+        introVideo.play().catch(() => introEnded(true))
+      })
+      $("#intro-sound").addEventListener("click", () => {
+        const muted = !introVideo.muted
+        introVideo.muted = muted
+        if (!muted && (introVideo.ended || !$("#intro-end").hidden)) {
+          $("#intro-end").hidden = true
+          introVideo.currentTime = 0
+          introVideo.play().catch(() => introEnded(true))
+        }
+        updateSoundButton()
+      })
+      function updateSoundButton() {
+        const muted = introVideo.muted
+        $("#icon-muted").hidden = !muted
+        $("#icon-sound").hidden = muted
+        $("#intro-sound").setAttribute("aria-label", muted ? labels.soundOn : labels.soundOff)
+      }
+
+      function renderHome() {
+        const hour = new Date().getHours()
+        $("#greeting").textContent = hour < 12 ? labels.greetMorning : hour < 18 ? labels.greetAfternoon : labels.greetEvening
+        $("#house-card-foot").textContent = pending ? labels.oneNeedsOk : (missionLive ? statusWord(missionStatus) : labels.openAgent)
+      }
+
       function mapPictureClick(clientX, clientY) {
         const box = screen.getBoundingClientRect()
         return mapClick({
@@ -740,8 +1597,13 @@
         })
       }
 
+      function fitComposer() {
+        mission.style.height = "auto"
+        mission.style.height = Math.min(mission.scrollHeight + 2, 140) + "px"
+      }
+
       function showThinking(text) {
-        let line = document.querySelector("#thinking")
+        let line = $("#thinking")
         if (!line) {
           line = document.createElement("div")
           line.id = "thinking"
@@ -753,7 +1615,7 @@
       }
 
       function clearThinking() {
-        document.querySelector("#thinking")?.remove()
+        $("#thinking")?.remove()
       }
 
       function add(role, text) {
@@ -764,35 +1626,76 @@
         thread.scrollTop = thread.scrollHeight
       }
 
-      function showPlan(plan) {
-        end.value = plan.end
+      function showPlan(next) {
+        plan = next
+        end.value = next.end
+        renderSteps()
+        if (next.status) setMissionStatus(next.status)
+      }
+
+      function currentStepIndex() {
+        if (!plan || !Array.isArray(plan.steps)) return -1
+        if (!missionLive) return -1
+        return plan.steps.findIndex((item) => item.status !== "done")
+      }
+
+      function renderSteps() {
         steps.replaceChildren()
-        if (!plan.steps || plan.steps.length === 0) {
+        const fullSteps = $("#full-steps")
+        fullSteps.replaceChildren()
+        const list = plan && Array.isArray(plan.steps) ? plan.steps : []
+        if (list.length === 0) {
           const empty = document.createElement("p")
           empty.className = "steps-empty"
           empty.id = "steps-empty"
           empty.textContent = labels.stepsEmpty || "Steps appear after you send a mission"
           steps.append(empty)
+          $("#fig-steps").textContent = "—"
           return
         }
-        for (const item of plan.steps) {
+        const now = currentStepIndex()
+        let doneCount = 0
+        list.forEach((item, index) => {
+          const isDone = item.status === "done"
+          if (isDone) doneCount += 1
+          const state = isDone ? "done" : index === now ? "now" : "next"
+
           const row = document.createElement("div")
           row.className = "step"
-          row.innerHTML = ""
+          const words = document.createElement("div")
+          words.className = "step-text"
           const title = document.createElement("span")
           title.textContent = item.text
           const meta = document.createElement("span")
           meta.className = "meta"
           meta.textContent = item.site + " · " + item.doneWhen
-          row.append(title, meta)
+          words.append(title, meta)
+          const chip = document.createElement("span")
+          chip.className = "chip " + (state === "done" ? "good" : state)
+          chip.textContent = state === "done" ? labels.stepDone : state === "now" ? labels.stepNow : labels.stepNext
+          row.append(words, chip)
           steps.append(row)
-        }
-        if (plan.status) setMissionStatus(plan.status)
+
+          const line = document.createElement("li")
+          line.className = state
+          const mark = document.createElement("span")
+          mark.className = "mark"
+          if (state === "done") {
+            mark.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#09C8B8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>'
+          } else {
+            const ring = document.createElement("span")
+            ring.className = state === "now" ? "now-dot pulse" : "ring"
+            mark.append(ring)
+          }
+          const words2 = document.createElement("span")
+          words2.textContent = item.text
+          line.append(mark, words2)
+          fullSteps.append(line)
+        })
+        $("#fig-steps").textContent = doneCount + " / " + list.length
       }
 
-      function setMissionStatus(status) {
-        missionLive = status === "planning" || status === "running" || status === "waiting_on_user"
-        missionPill.classList.remove("live", "waiting", "done")
+      function statusWord(status) {
         const map = {
           planning: labels.waiting || "Waiting",
           running: labels.running || "Running",
@@ -801,7 +1704,15 @@
           blocked: labels.blocked || "Blocked",
           aborted: labels.aborted || "Aborted",
         }
-        missionText.textContent = map[status] || status || "—"
+        return map[status] || status || "—"
+      }
+
+      function setMissionStatus(status) {
+        missionStatus = status
+        missionLive = status === "planning" || status === "running" || status === "waiting_on_user"
+        if (status !== "waiting_on_user") pending = null
+        missionPill.classList.remove("live", "waiting", "done", "blocked")
+        missionText.textContent = statusWord(status)
         if (status === "running") {
           missionPill.classList.add("live")
           send({ type: "work_status" })
@@ -814,13 +1725,114 @@
         }
         if (status === "waiting_on_user" || status === "planning") missionPill.classList.add("waiting")
         if (status === "done" || status === "aborted") missionPill.classList.add("done")
+        if (status === "blocked") missionPill.classList.add("blocked")
+        renderPending()
+        renderSteps()
+        updateAgentStatus()
+        if (!$("#view-home").hidden) renderHome()
+      }
+
+      function showWork(status) {
+        work = status && typeof status === "object" ? status : null
+        if (work && typeof work.lastAction === "string" && work.lastAction && work.lastAction !== lastAction) {
+          lastAction = work.lastAction
+          actions.push({ at: typeof work.updatedAt === "number" ? work.updatedAt : Date.now(), text: work.lastAction })
+          if (actions.length > 50) actions.shift()
+          renderActions()
+        }
+        updateAgentStatus()
+      }
+
+      function renderActions() {
+        const list = $("#did-list")
+        list.replaceChildren()
+        if (actions.length === 0) {
+          const empty = document.createElement("li")
+          empty.className = "muted"
+          empty.textContent = labels.didEmpty
+          list.append(empty)
+          return
+        }
+        for (const item of actions) {
+          const row = document.createElement("li")
+          const time = document.createElement("time")
+          const at = new Date(item.at)
+          time.dateTime = at.toISOString()
+          time.textContent = at.toLocaleTimeString(language === "he" ? "he-IL" : "en-GB", { hour: "2-digit", minute: "2-digit" })
+          const words = document.createElement("span")
+          words.textContent = item.text
+          row.append(time, words)
+          list.append(row)
+        }
+      }
+
+      function renderPending() {
+        const box = $("#ok-list")
+        box.replaceChildren()
+        if (!pending) {
+          const empty = document.createElement("p")
+          empty.className = "card muted"
+          empty.textContent = labels.nothingPending
+          box.append(empty)
+          return
+        }
+        const card = document.createElement("article")
+        card.className = "card ok-card waiting"
+        const title = document.createElement("h3")
+        title.textContent = pending.question
+        card.append(title)
+        if (pending.reason) {
+          const reason = document.createElement("p")
+          reason.textContent = pending.reason
+          card.append(reason)
+        }
+        const row = document.createElement("div")
+        row.className = "row"
+        const reply = document.createElement("button")
+        reply.type = "button"
+        reply.className = "btn primary"
+        reply.textContent = labels.reply
+        reply.addEventListener("click", () => {
+          if (panel.hidden) setPanel(true)
+          mission.focus()
+        })
+        const watch = document.createElement("button")
+        watch.type = "button"
+        watch.className = "btn"
+        watch.textContent = labels.watch
+        watch.addEventListener("click", (event) => openFull(event.currentTarget))
+        row.append(reply, watch)
+        card.append(row)
+        box.append(card)
+      }
+
+      function updateAgentStatus() {
+        let line = labels.statusIdle
+        if (driver === "user") line = labels.statusYou
+        else if (missionStatus === "waiting_on_user" && pending) line = labels.oneNeedsOk
+        else if (missionLive) line = (work && (work.detail || work.stepHint)) || labels.statusWorking
+        else if (missionStatus) line = statusWord(missionStatus)
+        $("#panel-status").textContent = line
+        $("#computer-status").textContent = line
+        $("#dock-status").textContent = line
+        const nowText = work && work.stepHint && missionLive ? work.stepHint : (missionLive ? statusWord(missionStatus) : labels.nothingYet)
+        $("#fig-now").textContent = nowText
+        const liveWord = driver === "user" ? labels.you : labels.live
+        $("#live-badge").hidden = !hasScreen
+        $("#live-text").textContent = liveWord
+        $("#full-live").hidden = !hasScreen
+        $("#full-live-text").textContent = liveWord
       }
 
       function updateDriverUi() {
         screen.classList.toggle("driving", driver === "user")
-        driverHint.textContent = driver === "user"
+        screenFrame.classList.toggle("driving", driver === "user")
+        const hint = driver === "user"
           ? (labels.controlHint || "You are driving — click the screen")
           : (labels.agentHint || "Opero is driving")
+        driverHint.textContent = hint
+        $("#full-hint").textContent = hint
+        updateAgentStatus()
       }
 
       function renderVault() {
@@ -839,7 +1851,7 @@
           name.textContent = description
           const remove = document.createElement("button")
           remove.type = "button"
-          remove.className = "ghost"
+          remove.className = "btn"
           remove.textContent = labels.vaultRemove || "Remove"
           remove.addEventListener("click", () => send({ type: "vault_remove", description }))
           row.append(name, remove)
@@ -847,47 +1859,68 @@
         }
       }
 
-      function applyLabels(text, language) {
+      function applyLabels(text, nextLanguage) {
         labels = text
-        document.documentElement.lang = language
-        document.documentElement.dir = language === "he" ? "rtl" : "ltr"
-        document.querySelector("#title").textContent = text.title
-        document.querySelector("#subtitle").textContent = text.subtitle
+        language = nextLanguage
+        document.documentElement.lang = nextLanguage
+        document.documentElement.dir = nextLanguage === "he" ? "rtl" : "ltr"
+        document.documentElement.style.setProperty("--flip", nextLanguage === "he" ? "-1" : "1")
+        for (const node of document.querySelectorAll("[data-l]")) {
+          const value = text[node.dataset.l]
+          if (value) node.textContent = value
+        }
+        for (const node of document.querySelectorAll("[data-l-aria]")) {
+          const value = text[node.dataset.lAria]
+          if (value) node.setAttribute("aria-label", value)
+        }
+        for (const node of document.querySelectorAll("[data-l-title]")) {
+          const value = text[node.dataset.lTitle]
+          if (value) node.setAttribute("title", value)
+        }
+        $("#title").textContent = text.title
+        $("#subtitle").textContent = text.subtitle
         mission.placeholder = text.placeholder
-        document.querySelector("#send").textContent = text.send
-        document.querySelector("#take").textContent = text.take
-        document.querySelector("#hand").textContent = text.handBack
-        document.querySelector("#end-label").childNodes[0].textContent = text.end + " "
-        document.querySelector("#level-label").childNodes[0].textContent = text.level + " "
-        document.querySelector("#language-label").childNodes[0].textContent = text.language + " "
-        document.querySelector("#plan-label").textContent = text.plan
-        document.querySelector("#screen-heading").textContent = text.screen
-        document.querySelector("#idle-title").textContent = text.screen
-        document.querySelector("#idle-text").textContent = text.idleScreen
-        document.querySelector("#key-title").textContent = text.keyTitle
-        document.querySelector("#key-body").textContent = text.keyBody
-        document.querySelector("#key-save").textContent = text.keySave
+        $("#send").textContent = text.send
+        $("#take").textContent = text.take
+        $("#hand").textContent = text.handBack
+        $("#end-label").childNodes[0].textContent = text.end + " "
+        $("#level-label").childNodes[0].textContent = text.level + " "
+        $("#language-label").childNodes[0].textContent = text.language + " "
+        $("#plan-label").textContent = text.plan
+        $("#chat-heading").textContent = text.mission
+        $("#screen-heading").textContent = text.screen
+        $("#idle-title").textContent = text.screen
+        $("#idle-text").textContent = text.idleScreen
+        $("#key-title").textContent = text.keyTitle
+        $("#key-body").textContent = text.keyBody
+        $("#key-save").textContent = text.keySave
         keyInput.placeholder = text.keyPlaceholder
-        document.querySelector("#vault-open").textContent = text.vault
-        document.querySelector("#vault-title").textContent = text.vaultTitle
-        document.querySelector("#vault-body").textContent = text.vaultBody
-        document.querySelector("#vault-save").textContent = text.vaultSave
-        document.querySelector("#vault-close").textContent = text.vaultClose
+        end.placeholder = text.endPlaceholder
+        $("#vault-open").textContent = text.vault
+        $("#vault-title").textContent = text.vaultTitle
+        $("#vault-body").textContent = text.vaultBody
+        $("#vault-save").textContent = text.vaultSave
+        $("#vault-close").textContent = text.vaultClose
         vaultDescription.placeholder = text.vaultDescription
         vaultValue.placeholder = text.vaultValue
         screen.alt = text.screen
-        const empty = document.querySelector("#steps-empty")
-        if (empty) empty.textContent = text.stepsEmpty
         if (socket?.readyState === WebSocket.OPEN) connText.textContent = text.connected
         else connText.textContent = text.disconnected
         readyBadge.textContent = ready ? text.keySaved : text.keyTitle
+        missionText.textContent = statusWord(missionStatus)
+        updateSoundButton()
         updateDriverUi()
         renderVault()
+        renderSteps()
+        renderPending()
+        renderActions()
+        renderHome()
       }
 
       updateDriverUi()
       setMissionStatus("")
       renderVault()
+      route()
     </script>
   </body>
 </html>
