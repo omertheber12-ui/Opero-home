@@ -1759,8 +1759,11 @@
 
       // Views: #intro, #home, and the house agent (default)
       let currentView = "house"
+      let lastHash = ""
       function route() {
         const hash = location.hash
+        if (hash === "#intro" && lastHash && lastHash !== "#intro") setIntroTarget(lastHash)
+        lastHash = hash
         const view = hash === "#intro" ? "intro" : hash === "#home" ? "home" : hash === "#insurance" ? "insurance" : "house"
         currentView = view
         const workspace = view === "house" || view === "insurance"
@@ -1787,10 +1790,16 @@
       function markIntroSeen() {
         try { localStorage.setItem(INTRO_SEEN, "1") } catch {}
       }
-      // A person lands on the intro once, then on Opero Home. Automation (the verify
-      // driver) has navigator.webdriver set and keeps the house agent screen.
-      if (!location.hash && !navigator.webdriver) {
-        history.replaceState(null, "", seenIntro() ? "#home" : "#intro")
+      // Netflix-style: every time a person opens the page, the intro plays first and
+      // then goes to the screen they opened (Opero Home by default). Automation (the
+      // verify driver) has navigator.webdriver set and skips the intro.
+      if (!navigator.webdriver && location.hash !== "#intro") {
+        setIntroTarget(location.hash || "#home")
+        history.replaceState(null, "", location.pathname + location.search + "#intro")
+      }
+      function setIntroTarget(hash) {
+        $("#intro-skip").setAttribute("href", hash)
+        $("#intro-enter").setAttribute("href", hash)
       }
 
       function startIntro() {
