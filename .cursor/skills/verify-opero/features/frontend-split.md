@@ -5,7 +5,7 @@ The house page lives in the `frontend/` package on port 8788. The house process 
 ## Sub-features
 
 - `two-processes-ready` — house health on 8787 and page UI on 8788.
-- `house-shell-on-8788` — Opero heading, Live/מחובר, hidden key card, composer, Send, Take control, I'm done, Vault.
+- `house-shell-on-8788` — Opero heading, Live/מחובר, hidden key card, composer, Send, Pause agent, Resume agent, Vault.
 - `socket-across-origins` — page on 8788 talks to house WebSocket on 8787; fake mission yields thread activity and a plan end.
 - `local-labels` — Language → Hebrew updates button names from page labels without a house `labels` push.
 - `contract-exists` — `frontend/CONTRACT.md` documents the socket boundary; house no longer serves `public/index.html`.
@@ -24,9 +24,9 @@ Preconditions:
 - `node .cursor/skills/verify-opero/bin/drive.mjs doctor` exits 0.
 
 - **Two processes.** Confirm health JSON on 8787 and HTTP 200 for the page on 8788. Doctor and drives use 8788 only.
-- **House shell.** Run `node .cursor/skills/verify-opero/bin/drive.mjs house-shell`. Heading Opero, connection Live or מחובר, key card `aria-hidden=true`, placeholder Give a mission…, Send / Take control / I'm done / Vault present.
+- **House shell.** Run `node .cursor/skills/verify-opero/bin/drive.mjs house-shell`. Heading Opero, connection Live or מחובר, key card `aria-hidden=true`, placeholder Give a mission…, Send / Pause agent / Resume agent / Vault present.
 - **Socket mission.** Run `node .cursor/skills/verify-opero/bin/drive.mjs send split-mission --text "Open example.com and bring back the title" --wait-ms 25000`. Proof: WebSocket frames go to 8787; thread gains activity; End is filled (fake planner plan ready).
-- **Local labels.** On the page, set Language to Hebrew. Confirm Send→שליחה, Take control→קחו שליטה, I'm done→סיימתי, Vault→כספת. WebSocket received frames must not include `type: labels`.
+- **Local labels.** On the page, set Language to Hebrew. Confirm Send→שליחה, Pause agent→השהיית הסוכן, Resume agent→המשך הסוכן, Vault→כספת. WebSocket received frames must not include `type: labels`.
 - **Contract.** `frontend/CONTRACT.md` exists and documents ports/socket. `public/index.html` is absent (house does not serve the page).
 
 ## Gotchas

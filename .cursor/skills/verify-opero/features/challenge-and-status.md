@@ -24,7 +24,7 @@ Preconditions:
 - A mission can be sent without answering a question that is already waiting. If the badge is Waiting, sending is not a fresh mission.
 - The Computer can wake. A wake failure blocks the bot-check page.
 
-- **Bot check.** Send a mission that opens one of those pages. The thread shows a trying line and the agent clicks before any live-view handoff. The handoff, with its URL when one exists, appears only if the check is still there. The Computer then stays with the person until I'm done.
+- **Bot check.** Send a mission that opens one of those pages. The thread shows a trying line and the agent clicks before any live-view handoff. The handoff, with its URL when one exists, appears only if the check is still there. The Computer then stays with the person until Resume agent.
 - **Check clears.** Open a page that starts on that check and leaves it after the click. Opero keeps the mission. The thread does not post the handoff.
 - **Just a moment.** Open a page whose only challenge text is "just a moment". Opero keeps driving and the thread does not post the handoff.
 - **Thinking.** Send a mission and watch the thread. One thinking line appears during the turn and is gone after the next message or question.

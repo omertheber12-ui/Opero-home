@@ -40,7 +40,7 @@ It passes only when the page at `http://127.0.0.1:8788` shows the Opero heading,
 
 ## Drive
 
-The harness is Playwright, already installed in this repo. It uses roles and accessible names. The house language is a setting. English controls are `Send`, `Take control`, `I'm done`, `Vault`, `End`, placeholder `Give a mission…`. Hebrew controls are `שליחה`, `קחו שליטה`, `סיימתי`, `כספת`, `סיום`, placeholder `תנו משימה…`. Read the visible name and use that exact string.
+The harness is Playwright, already installed in this repo. It uses roles and accessible names. The house language is a setting. English controls are `Send`, `Pause agent`, `Resume agent`, `Vault`, `End`, placeholder `Give a mission…`. Hebrew controls are `שליחה`, `השהיית הסוכן`, `המשך הסוכן`, `כספת`, `סיום`, placeholder `תנו משימה…`. Read the visible name and use that exact string.
 
 ```bash
 node .cursor/skills/verify-opero/bin/drive.mjs house-shell
@@ -49,7 +49,7 @@ node .cursor/skills/verify-opero/bin/drive.mjs snapshot <name>
 node .cursor/skills/verify-opero/bin/drive.mjs send <name> --text "<line>" --wait-ms 20000
 ```
 
-`house-shell` opens the page and records the thread, plan, and Computer without sending. `handoff` presses Take control, records the hint, presses I'm done, and records the hint again. `send` types the composer by its placeholder and presses the Send button. `snapshot` records the page and the WebSocket frames the page itself sent.
+`house-shell` opens the page and records the thread, plan, and Computer without sending. `handoff` presses Pause agent, records the hint, presses Resume agent, and records the hint again. `send` types the composer by its placeholder and presses the Send button. `snapshot` records the page and the WebSocket frames the page itself sent.
 
 The composer is the textbox whose placeholder is the mission prompt. The End field is the textbox named End or סיום. The Computer picture is the image named Computer or מחשב, present only after a screen frame. Clicks go to that image, not to coordinates chosen ahead of time.
 

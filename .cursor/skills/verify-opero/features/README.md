@@ -54,7 +54,7 @@ Drive the claims in [docs/superpowers/specs/2026-11-23-chat-owns-missions.md](..
 - [Frontend split](./frontend-split.md) is the page package on 8788 talking to the house on 8787.
 - [Plan block room](./plan-block-room.md) keeps Plan tall enough under a long Mission thread.
 - [House shell](./house-shell.md) opens the chat, plan, and Computer.
-- [Computer takeover](./computer-takeover.md) covers Take control, picture input, and I'm done.
+- [Computer takeover](./computer-takeover.md) covers Pause agent, picture input, and Resume agent.
 - [Challenge and status](./challenge-and-status.md) covers a bot-check handoff, the thinking line, work status, and readable progress.
 - [Completion and safety](./completion-and-safety.md) covers payment proof, approval, pause, account, restart, rescue, and trace.
 - [Live conversation](./live-conversation.md) covers a chat line during a mission, new-mission priority, one action agent, and wake when a plan exists.

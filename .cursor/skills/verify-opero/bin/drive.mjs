@@ -48,9 +48,10 @@ async function readState(page) {
       thread: document.querySelector("#thread")?.innerText ?? "",
       thinking: document.querySelector("#thinking")?.textContent ?? null,
       placeholder: document.querySelector("#mission")?.getAttribute("placeholder") ?? "",
-      send: document.querySelector("#send")?.textContent ?? "",
-      take: document.querySelector("#take")?.textContent ?? "",
-      hand: document.querySelector("#hand")?.textContent ?? "",
+      send: document.querySelector("#send")?.textContent?.trim() ?? "",
+      take: document.querySelector("#take")?.textContent?.trim() ?? "",
+      hand: document.querySelector("#hand")?.textContent?.trim() ?? "",
+      fullOpen: !(document.querySelector("#full")?.hidden ?? true),
     }
   })
 }
@@ -107,16 +108,22 @@ async function doctor() {
   }
 }
 
+const WATCH_NAME = /Watch full screen|צפייה במסך מלא/
+const PAUSE_NAME = /Pause agent|השהיית הסוכן/
+
+/** Pause agent and Resume agent live in the full-screen computer view. Open it. */
+async function openComputer(page) {
+  await page.getByRole("button", { name: WATCH_NAME }).first().click()
+  await page.getByRole("button", { name: PAUSE_NAME }).or(page.getByRole("button", { name: /Resume agent|המשך הסוכן/ })).first().waitFor()
+}
+
 async function houseShell() {
   const session = await openPage()
   try {
     await session.page.getByRole("heading", { name: "Mission", level: 2 }).waitFor()
-    const take = session.page.getByRole("button", { name: /Take control|קחו שליטה/ })
-    const hand = session.page.getByRole("button", { name: /I'm done|סיימתי/ })
     const send = session.page.getByRole("button", { name: /Send|שליחה/ })
-    await take.waitFor()
-    await hand.waitFor()
     await send.waitFor()
+    await openComputer(session.page)
     const snap = await save("house-shell", session.page, { sent: session.sent })
     const problems = doctorProblems(snap)
     if (!snap.placeholder) problems.push("composer has no placeholder")
@@ -130,6 +137,7 @@ async function houseShell() {
 async function handoff() {
   const session = await openPage()
   try {
+    await openComputer(session.page)
     const before = await save("handoff-before", session.page, {})
     const takeName = before.take
     const handName = before.hand

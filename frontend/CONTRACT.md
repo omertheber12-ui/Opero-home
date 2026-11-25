@@ -109,8 +109,8 @@ Verification (`.cursor/skills/verify-opero`) drives accessible names and these i
 | Control | English | Hebrew |
 | --- | --- | --- |
 | Send | `Send` | `שליחה` |
-| Take control | `Take control` | `קחו שליטה` |
-| I'm done | `I'm done` | `סיימתי` |
+| Pause agent (full-screen view) | `Pause agent` | `השהיית הסוכן` |
+| Resume agent (full-screen view, while paused) | `Resume agent` | `המשך הסוכן` |
 | Vault open | `Vault` | `כספת` |
 | Vault save | `Save` | `שמירה` |
 | Vault close | `Close` | `סגירה` |

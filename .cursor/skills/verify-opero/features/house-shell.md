@@ -20,7 +20,7 @@ Preconditions:
 - **Open the house.** Go to the page. Run `node .cursor/skills/verify-opero/bin/drive.mjs house-shell`. The heading Opero is visible, the connection pill says Live or מחובר, and the badge says Ready or מוכן.
 - **See the composer.** The mission textbox shows placeholder Give a mission… or תנו משימה…. The Send button is named Send or שליחה.
 - **See the plan.** The End textbox is named End or סיום. Empty steps say that steps appear after a mission, or the current mission's steps are listed.
-- **See the Computer.** The Computer heading is Computer or מחשב. Take control and I'm done are buttons. The idle line is visible when no picture has arrived.
+- **See the Computer.** The computer card heading is Agent’s computer or המחשב של הסוכן. Watch full screen opens the full-screen view, where Pause agent is a button and Resume agent appears while paused. The idle line is visible when no picture has arrived.
 - **Proof.** `evidence/house-shell/aria.txt` names those controls, and `state.json` records the badge, mission pill, and whether the picture is hidden.
 
 ## Gotchas
