@@ -32,12 +32,16 @@ export type SteerInput = {
   message: string
   language: Language
   thread: ThreadLine[]
+  /** Names of saved vault details. Never the values. */
+  vaultItems?: string[]
 }
 
 export type PlanInput = {
   request: string
   language: Language
   thread?: ThreadLine[]
+  /** Names of saved vault details. Never the values. */
+  vaultItems?: string[]
 }
 
 export type Steer =
@@ -68,18 +72,27 @@ export type Planner = {
   converse(input: SteerInput): Promise<Steer>
 }
 
-function planRules(language: Language): string {
+/** Tells the chat agent the vault exists, so it offers it instead of refusing or asking for a secret in chat. */
+export function vaultRule(items: string[] = []): string {
+  const saved = items.length > 0 ? items.map((item) => JSON.stringify(item)).join(", ") : "none yet"
+  return `The person has a Vault in Opero for passwords, ID numbers, usernames and other sensitive details. Saved vault details (names only): ${saved}.
+Never ask the person to type a password, ID number, card number or code value into this chat, and never repeat one. When a mission needs a sensitive detail that is not saved, or the person asks how to give you one safely, offer the Vault: tell them to press the Vault button at the top of the page (the lock), save the detail with a short name of what it is for, then tell you here when it is saved. The browser agent types saved details straight into the site; the value never enters the chat.
+A one-time SMS code is not stored in the Vault: the person types it into the site after pausing the agent, or sends it when the agent asks for it.`
+}
+
+function planRules(language: Language, vaultItems?: string[]): string {
   return `Language: ${language}. You are the planning agent. Do not browse.
 The chat thread is the source of truth. Facts already stated there are decided. Ask only for something still missing. Do not re-ask for a city, service, date, person, or account the thread already named.
 If the mission is too vague to aim the browser well (missing which office, which date, which person, which account, or another needed choice), ask one clarifying question first. Reply {"type":"ask","question":"..."}. Do not invent those details.
 When the mission is clear enough, write the plan. Reply {"type":"plan","end":"...","outcome":"read|navigate|transact","steps":[{"id":"...","text":"...","site":"...","doneWhen":"...","commit":false}]}.
 Rules for a plan: every step must have a real site (URL or domain), a concrete browser instruction, and doneWhen as the moment the facts are on the page. end is a check for the chat reply (for news: the chat will contain dated headlines copied from the page). Do not put the headlines themselves in end — they are not on the page yet.
-outcome is read for facts, navigate for opening a page, transact for pay/buy/send/delete.`
+outcome is read for facts, navigate for opening a page, transact for pay/buy/send/delete.
+${vaultRule(vaultItems)}`
 }
 
 export function buildPlanMessages(input: PlanInput): ChatMessage[] {
   const thread = input.thread ?? []
-  const system: ChatMessage = { role: "system", content: `${SYSTEM_TEXT}\n${planRules(input.language)}` }
+  const system: ChatMessage = { role: "system", content: `${SYSTEM_TEXT}\n${planRules(input.language, input.vaultItems)}` }
   if (thread.length === 0) {
     return [system, { role: "user", content: `Mission: ${input.request}` }]
   }
@@ -107,7 +120,8 @@ ${thread.length === 0 ? `User: ${input.message}\n` : ""}Reply one JSON object. C
 {"type":"resume","text":"..."} only when they say the person check is finished or they are handing the screen back.
 {"type":"stop","question":"..."} when they want this mission to stop.
 If a person check is active and they did not say it is finished, use reply. Do not resume.
-If the live mission status is not actively running or waiting, prefer start for a new task.`
+If the live mission status is not actively running or waiting, prefer start for a new task.
+${vaultRule(input.vaultItems)}`
   return [
     { role: "system", content: SYSTEM_TEXT },
     ...threadToChatMessages(thread),

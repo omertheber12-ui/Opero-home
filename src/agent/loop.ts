@@ -337,6 +337,7 @@ export class HouseLoop {
         message: text,
         language: this.language,
         thread: this.deps.recentThread?.() ?? [],
+        vaultItems: this.deps.vault.descriptions(),
       })
       this.bumpModelCalls()
     } catch (error) {
@@ -537,6 +538,7 @@ export class HouseLoop {
         request,
         language: this.language,
         thread: this.deps.recentThread?.() ?? [],
+        vaultItems: this.deps.vault.descriptions(),
       })
       this.bumpModelCalls()
     } catch (error) {
@@ -584,6 +586,7 @@ export class HouseLoop {
         request,
         language: this.language,
         thread: this.deps.recentThread?.() ?? [],
+        vaultItems: this.deps.vault.descriptions(),
       })
       this.bumpModelCalls()
     } catch (error) {

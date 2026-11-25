@@ -107,3 +107,37 @@ describe("parseSteer", () => {
     expect(parseSteer({ type: "queue" })).toEqual({ type: "start" })
   })
 })
+
+describe("vault rule", () => {
+  const converse = (vaultItems?: string[]) =>
+    buildConverseMessages({
+      request: "Check my insurance",
+      end: "policies listed",
+      status: "waiting_on_user",
+      question: null,
+      driver: "agent",
+      personCheck: false,
+      pageUrl: "https://harb.cma.gov.il",
+      pageText: "login",
+      message: "send me a secure form for my password",
+      language: "he",
+      thread: [],
+      vaultItems,
+    })
+
+  it("tells the chat agent to offer the Vault and names saved details only", () => {
+    const text = converse(["Har HaBituach ID number"]).map((message) => String(message.content)).join("\n")
+    expect(text).toContain("offer the Vault")
+    expect(text).toContain('"Har HaBituach ID number"')
+  })
+
+  it("says the vault is empty when nothing is saved", () => {
+    const text = converse().map((message) => String(message.content)).join("\n")
+    expect(text).toContain("Saved vault details (names only): none yet.")
+  })
+
+  it("puts the vault rule in the plan prompt", () => {
+    const system = String(buildPlanMessages({ request: "Log in to my bank", language: "en", vaultItems: [] })[0]?.content)
+    expect(system).toContain("offer the Vault")
+  })
+})
