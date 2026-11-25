@@ -523,6 +523,9 @@
         font-weight: 600;
       }
       .lang-btn:hover { background: var(--surface-2); }
+      .vault-btn { display: inline-flex; align-items: center; gap: 6px; }
+      .msg-action { align-self: flex-start; margin-block-start: -4px; }
+      @media (max-width: 960px) { #vault-open-text { display: none; } .vault-btn { width: 36px; padding: 0; justify-content: center; } }
       .avatar { position: relative; font-size: 16px; font-weight: 600; }
       .avatar-dot {
         position: absolute;
@@ -1098,6 +1101,7 @@
         </nav>
         <div class="top-end">
           <div class="sr-only" id="conn-pill" role="status"><span class="dot"></span><span id="conn-text">Offline</span></div>
+          <button class="lang-btn vault-btn" id="vault-open" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="vault-open-text">Vault</span></button>
           <button class="lang-btn" id="lang-toggle" type="button" lang="he">עברית</button>
           <button class="avatar" id="settings-open" type="button" aria-expanded="false" aria-controls="settings-pop" data-l-aria="settings" aria-label="Settings">
             <span id="avatar-initial" aria-hidden="true">O</span>
@@ -1114,8 +1118,7 @@
             <label class="field" id="language-label">Language
               <select id="language"><option value="en">English</option><option value="he">עברית</option></select>
             </label>
-            <button class="btn" id="vault-open" type="button">Vault</button>
-          </div>
+            </div>
         </div>
       </header>
 
@@ -1510,6 +1513,7 @@
           clearThinking()
           add("agent", message.question)
           pending = { question: message.question, reason: message.reason }
+          if (message.reason === "secret") addVaultAction(message.question)
           setMissionStatus("waiting_on_user")
         }
         if (message.type === "status") setMissionStatus(message.status)
@@ -1640,14 +1644,18 @@
       keyInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") $("#key-save").click()
       })
-      $("#vault-open").addEventListener("click", () => {
+      function openVault(description) {
         closeSettings()
         vaultOverlay.classList.remove("hidden")
         vaultOverlay.setAttribute("aria-hidden", "false")
         vaultMsg.textContent = ""
         send({ type: "vault_list" })
-        vaultDescription.focus()
-      })
+        if (description) {
+          vaultDescription.value = description
+          vaultValue.focus()
+        } else vaultDescription.focus()
+      }
+      $("#vault-open").addEventListener("click", () => openVault())
       $("#vault-close").addEventListener("click", () => {
         vaultOverlay.classList.add("hidden")
         vaultOverlay.setAttribute("aria-hidden", "true")
@@ -2189,6 +2197,31 @@
         thread.scrollTop = thread.scrollHeight
       }
 
+      /** The house asks "I don't have one saved detail for X." when the vault lacks a detail. */
+      function missingDetail(question) {
+        const prefix = "I don't have one saved detail for "
+        return question.startsWith(prefix) ? question.slice(prefix.length).replace(/\.$/, "") : ""
+      }
+
+      function vaultButton(question, primary) {
+        const button = document.createElement("button")
+        button.type = "button"
+        button.className = primary ? "btn primary" : "btn"
+        button.textContent = labels.vaultAdd
+        button.addEventListener("click", () => openVault(missingDetail(question)))
+        return button
+      }
+
+      function addVaultAction(question) {
+        const hint = document.createElement("div")
+        hint.className = "msg agent"
+        hint.textContent = labels.vaultNeeded
+        const button = vaultButton(question, true)
+        button.classList.add("msg-action")
+        thread.append(hint, button)
+        thread.scrollTop = thread.scrollHeight
+      }
+
       function showPlan(next) {
         plan = next
         end.value = next.end
@@ -2350,9 +2383,9 @@
         const title = document.createElement("h3")
         title.textContent = pending.question
         card.append(title)
-        if (pending.reason) {
+        if (pending.reason === "secret") {
           const reason = document.createElement("p")
-          reason.textContent = pending.reason
+          reason.textContent = labels.vaultNeeded
           card.append(reason)
         }
         const row = document.createElement("div")
@@ -2360,6 +2393,7 @@
         const reply = document.createElement("button")
         reply.type = "button"
         reply.className = "btn primary"
+        if (pending.reason === "secret") reply.className = "btn"
         reply.textContent = labels.reply
         reply.addEventListener("click", () => {
           if (panel.hidden) setPanel(true)
@@ -2371,6 +2405,7 @@
         watch.textContent = labels.watch
         watch.addEventListener("click", (event) => openFull(event.currentTarget))
         row.append(reply, watch)
+        if (pending.reason === "secret") row.prepend(vaultButton(pending.question, true))
         card.append(row)
         box.append(card)
       }
@@ -2479,7 +2514,8 @@
         $("#key-save").textContent = text.keySave
         keyInput.placeholder = text.keyPlaceholder
         end.placeholder = text.endPlaceholder
-        $("#vault-open").textContent = text.vault
+        $("#vault-open-text").textContent = text.vault
+        $("#vault-open").setAttribute("aria-label", text.vault)
         $("#vault-title").textContent = text.vaultTitle
         $("#vault-body").textContent = text.vaultBody
         $("#vault-save").textContent = text.vaultSave
